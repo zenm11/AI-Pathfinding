@@ -26,3 +26,12 @@ Replace role labels with your 6–7 group members' names. Use actual app results
 ## Before recording/submission
 
 Add member names and truthful contributions. Verify the instructor can access both URLs. Record at readable zoom, show several route pairs, upload a 10–15 minute video, and submit the app/video URLs through the course submission form. The app does not submit anything automatically.
+
+## Updated app demonstration
+
+- Start in **Search ready**. No finished route is drawn until you choose **Preview final route** or the search reaches the goal. Preview does not advance the search; **Reset** returns to the start.
+- Press **Step** and read the live decision panel next to the map. It shows the chosen city's cost, heuristic and priority, the bound calculations, and the next three frontier cities. The full frontier remains available below the experiments.
+- Use **Zerind → Timisoara** from the five-route comparison: at Zerind, landmark bounds are 43 km while the hop bound is 2 × 70 = 140 km. The true optimal cost is 193 km. The hop component therefore strengthens this estimate without overestimating.
+- Use **Measure five routes** before recording the comparison. **Download CSV** exports your device's measured results. Search timings are warmed medians; goal preparation is a separate single sample and landmark preparation is a one-time shared cost. Tiny timings can round to 0.0 µs.
+- Expand the storage breakdown to explain exact typed-array payloads and the assumed frontier payload. It remains an estimate of retained algorithm data, not measured peak RAM.
+- Run **Check all 400 start–destination pairs** to show cost agreement and search-effort counts. Agreement alone is not an independent correctness proof; the repository tests check against Floyd–Warshall. Do not generalize expansion counts into guaranteed runtime savings.

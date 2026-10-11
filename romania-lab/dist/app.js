@@ -1,7 +1,9 @@
 import {cities,roads,search,benchmark,heuristicParts,validateCity} from './search.js';
+import {examples, exampleIds, compareExample, allPairsEvidence, decisionAt, storageBreakdown} from './lab.js';
 import {repositoryUrl} from './config.js';
 const $=id=>document.getElementById(id);
-let start=0,goal=12,algorithm='astar',results={},timings=null,index=-1,timer=null;
+let start=0,goal=12,algorithm='astar',results={},timings=null,index=-1,timer=null,preview=false;
+let study=examples.map(compareExample),studyBusy=false;
 const name=id=>cities[id].name;
 const pathText=path=>path.map(name).join(' → ');
 const svgNS='http://www.w3.org/2000/svg';
@@ -9,10 +11,10 @@ function svg(tag,attrs,text){const el=document.createElementNS(svgNS,tag);for(co
 for(const id of ['start','goal'])for(const c of [...cities].sort((a,b)=>a.name.localeCompare(b.name))){const option=document.createElement('option');option.value=c.id;option.textContent=c.name;$(id).append(option);}
 $('start').value=start;$('goal').value=goal;
 function stop(){clearInterval(timer);timer=null;$('play').textContent='Play search';}
-function compare(){stop();start=Number($('start').value);goal=Number($('goal').value);timings=null;results={ucs:search(start,goal,'ucs'),astar:search(start,goal,'astar')};index=-1;render();$('announcement').textContent=`Compared ${name(start)} to ${name(goal)}. Both routes cost ${results.ucs.cost} kilometres.`;}
+function compare(){stop();start=Number($('start').value);goal=Number($('goal').value);timings=null;results={ucs:search(start,goal,'ucs'),astar:search(start,goal,'astar')};index=-1;preview=false;render();$('announcement').textContent=`Compared ${name(start)} to ${name(goal)}. Both routes cost ${results.ucs.cost} kilometres.`;}
 function renderMap(step){
  const map=$('map');map.querySelectorAll('g').forEach(g=>g.remove());
- const group=svg('g',{}),path=step?.path||results[algorithm].path;
+ const group=svg('g',{}),path=preview?results[algorithm].path:(step?.path||[]);
  const highlighted=new Set(path.slice(1).map((id,i)=>[path[i],id].sort((a,b)=>a-b).join('-')));
  for(const e of roads){const a=cities[e.a],b=cities[e.b],on=highlighted.has([e.a,e.b].sort((a,b)=>a-b).join('-'));group.append(svg('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'road'+(on?' path':'')}));}
  for(const e of roads){const a=cities[e.a],b=cities[e.b];group.append(svg('text',{x:(a.x+b.x)/2+7,y:(a.y+b.y)/2-6,class:'road-label','text-anchor':'middle'},e.cost));}
@@ -25,7 +27,7 @@ function renderMap(step){
  map.append(group);
 }
 function renderResults(){
- $('results').innerHTML=['ucs','astar'].map(a=>{const r=results[a];return `<article class="result-card ${a===algorithm?'active':''}"><div class="result-header"><h3>${a==='ucs'?'Uniform-Cost Search':'A* Search'}</h3><span>${a==='ucs'?'BLIND SEARCH':'TRI-ANCHOR + HOP'}</span></div><div class="metrics"><div class="metric"><label>Path cost</label><strong>${r.cost} <small>km</small></strong></div><div class="metric"><label>Expanded cities</label><strong>${r.expanded}<small> / 20</small></strong></div><div class="metric"><label>Median runtime</label><strong>${timings?(timings[a]*1000).toFixed(1):'—'} <small>${timings?'µs':'unmeasured'}</small></strong></div></div><div class="result-details"><span>Peak frontier: ${r.peakFrontier}</span><span>Peak stored cities: ${r.peakStored}</span><span>Storage model: ${r.searchBytes+r.heuristicBytes} B</span></div><p class="result-path">${pathText(r.path)}</p></article>`;}).join('');
+ $('results').innerHTML=['ucs','astar'].map(a=>{const r=results[a];return `<article class="result-card ${a===algorithm?'active':''}"><div class="result-header"><h3>${a==='ucs'?'Uniform-Cost Search':'A* Search'}</h3><span>${a==='ucs'?'BLIND SEARCH':'TRI-ANCHOR + HOP'}</span></div><div class="metrics"><div class="metric"><label>Path cost</label><strong>${r.cost} <small>km</small></strong></div><div class="metric"><label>Expanded cities</label><strong>${r.expanded}<small> / 20</small></strong></div><div class="metric"><label>Median runtime</label><strong>${timings?(timings[a]*1000).toFixed(1):'—'} <small>${timings?'µs':'unmeasured'}</small></strong></div></div><div class="result-details"><span>Peak frontier: ${r.peakFrontier}</span><span>Peak stored cities: ${r.peakStored}</span><span>Estimated storage: ${r.searchBytes+r.heuristicBytes} B</span></div><p class="result-path">${pathText(r.path)}</p></article>`;}).join('');
  const saved=results.ucs.expanded-results.astar.expanded;
  $('insight').textContent=`Both searches find a ${results.ucs.cost} km optimal route. ${saved>0?`A* examines ${saved} fewer ${saved===1?'city':'cities'} before reaching the goal.`:saved===0?'Both examine the same number of cities for this pair.':`A* examines ${-saved} more cities for this pair under alphabetical tie-breaking.`} ${start===goal?'You are already at the destination: no road travel is needed.':'A* trades extra heuristic preparation and storage for guidance toward the goal.'}`;
  $('timing-note').textContent=timings?`Median of ${timings.batches} batches × ${timings.runs} searches, after warm-up. A* goal preparation: ${(timings.goalSetupMs*1000).toFixed(1)} µs; one-time landmark preparation: ${(timings.landmarkSetupMs*1000).toFixed(1)} µs. Preparation is excluded from search timing. Storage is a logical payload estimate, not browser heap usage.`:'Runtime is measured separately from animation. Memory figures model stored search data; they are not browser heap measurements.';
@@ -35,8 +37,8 @@ function render(){
  $('map-algorithm').textContent=algorithm==='astar'?'A* SEARCH':'UNIFORM-COST';
  $('route-cost').textContent=`${r.cost} km`;$('route-description').textContent=`${r.path.length-1} roads · ${name(start)} to ${name(goal)}`;
  $('timeline').max=r.steps.length;$('timeline').value=index+1;
- $('step-label').textContent=index<0?'Route overview':`${index+1} / ${r.steps.length}`;
- $('current-node').textContent=step?`${step.done?'GOAL':'CURRENT'} · ${name(step.current)}`:'ROUTE OVERVIEW';
+ $('step-label').textContent=index<0?'Ready':`${index+1} / ${r.steps.length}`;
+ $('current-node').textContent=step?`${step.done?'GOAL':'CURRENT'} · ${name(step.current)}`:'SEARCH READY';
  const initial=[{id:start,g:0,h:algorithm==='astar'?heuristicParts(start,goal).h:0}];initial[0].f=initial[0].h;
  const frontier=step?.frontier||initial;
  $('frontier').innerHTML=frontier.length?frontier.map(n=>`<tr><td>${name(n.id)}</td><td>${n.g}</td><td>${n.h}</td><td>${n.f}</td></tr>`).join(''):'<tr><td colspan="4">No cities waiting.</td></tr>';
@@ -44,18 +46,80 @@ function render(){
  $('explored').innerHTML=step?.explored.map(id=>`<span>${name(id)}</span>`).join('')||'<span>Search has not started</span>';
  const parts=heuristicParts(step?.current??start,goal);
  $('heuristic-example').innerHTML=`<div class="example">At ${name(step?.current??start)}, heading to ${name(goal)}:<br>landmark bounds ${parts.landmarks.map(p=>p.bound).join(', ')} km · hop bound ${parts.hopBound} km<br><strong>h(n) = ${parts.h} km</strong></div>`;
- renderMap(step);renderResults();
+ renderMap(step);renderResults();renderDecision(step);renderStorage();
 }
+function renderDecision(step) {
+ const r=results[algorithm],d=decisionAt(r,index),parts=heuristicParts(d.node,goal);
+ $('view-state').textContent=preview?'FINAL ROUTE PREVIEW':step?(step.done?'SEARCH COMPLETE':'SEARCH PLAYBACK'):'SEARCH READY';
+ $('preview').textContent=preview?'Return to search':'Preview final route';
+ $('preview').setAttribute('aria-pressed',String(preview));
+ $('path-legend').textContent=preview||step?.done?'Final route':'Current path';
+ $('step').disabled=index===r.steps.length-1&&!preview;
+ $('reset').disabled=index<0&&!preview;
+ $('decision-count').textContent=preview?'Result':step?`${index+1} / ${r.steps.length}`:'Ready';
+ $('decision-title').textContent=preview?'The optimal route':d.title;
+ $('decision-text').textContent=preview?`${pathText(r.path)}. Total: ${r.cost} km across ${r.path.length-1} roads. Return to search or press Play to follow how it was found.`:d.text;
+ $('decision-math').innerHTML=preview?`<strong>${r.cost} km</strong><span>Final path cost</span>`:`<span>g <strong>${d.g}</strong></span><span>${algorithm==='astar'?'+ h':'h (unused)'} <strong>${d.h}</strong></span><span>= priority <strong>${d.g+d.h}</strong></span>`;
+ const bounds=[...parts.landmarks.map(p=>({label:p.name,calculation:`|${p.toNode} − ${p.toGoal}|`,value:p.bound})),{label:'Fewest roads',calculation:`${parts.hopBound/70} × 70`,value:parts.hopBound}];
+ $('bound-breakdown').innerHTML=preview?'<p class="small-note">Return to search to inspect the estimate for each selected city.</p>':algorithm==='ucs'?'<p class="small-note">UCS does not use an estimate. Its priority is only g(n), the cost so far.</p>':`<p class="small-note">${name(d.node)} → ${name(goal)}<br>Each landmark expression is |distance to city − distance to goal|.</p><ul class="bound-list">${bounds.map(b=>`<li class="${b.value===parts.h?'winning-bound':''}"><span>${b.label}<small>${b.calculation}</small></span><strong>${b.value}${b.value===parts.h?'<small>MAX</small>':''}</strong></li>`).join('')}</ul><p class="bound-answer">Take the largest lower bound: <strong>h = ${parts.h} km</strong></p>`;
+ const frontier=step?.frontier||[{id:start,g:0,h:algorithm==='astar'?parts.h:0}];
+ $('frontier-caption').textContent=preview?'Playback is paused':step?.done?'Goal selected':step?'After this step · lowest priority first':'Before the first step · lowest priority first';
+ $('next-frontier').innerHTML=preview?'<li class="small-note">Return to search to continue exploring.</li>':step?.done?'<li class="small-note">Search complete. No further selection is needed.</li>':frontier.slice(0,3).map(n=>`<li><span>${name(n.id)}</span><strong>${n.g+n.h}</strong></li>`).join('')||'<li>Frontier empty</li>';
+}
+function renderStorage() {
+ const u=storageBreakdown(results.ucs),a=storageBreakdown(results.astar);
+ const rows=[['Costs (typed array)','costs'],['Parents (typed array)','parents'],['Explored flags (typed array)','flags'],['Peak frontier (8 B per entry assumed)','frontier'],['Goal heuristic (typed array)','heuristic'],['Shared landmark tables (typed arrays)','landmarks']];
+ $('storage-breakdown').innerHTML=rows.map(([label,key])=>`<tr><td>${label}</td><td>${u[key]}</td><td>${a[key]}</td></tr>`).join('')+`<tr class="total-row"><td>Total estimated retained storage</td><td>${results.ucs.searchBytes}</td><td>${results.astar.searchBytes+results.astar.heuristicBytes}</td></tr>`;
+}
+const micros=value=>(value*1000).toFixed(1);
+function renderStudy() {
+ $('study-results').innerHTML=study.map((row,i)=>['ucs','astar'].map((a,j)=>`<tr>${j===0?`<th scope="rowgroup" rowspan="2"><button class="route-link" data-example="${i}">${row.start} → ${row.goal}</button><small>${row.reason}</small></th>`:''}<td>${a==='ucs'?'UCS':'A*'}</td><td>${row[a].cost}</td><td>${row[a].expanded}</td><td>${row.timing?micros(row.timing[a]):'—'}</td><td>${a==='ucs'?'n/a':row.timing?micros(row.timing.goalSetupMs):'—'}</td><td>${row[a].searchBytes+row[a].heuristicBytes}</td></tr>`).join('')).join('');
+}
+$('reset').addEventListener('click',()=>{stop();index=-1;preview=false;render();});
+$('preview').addEventListener('click',()=>{stop();preview=!preview;render();});
+$('study-results').addEventListener('click',event=>{
+ const button=event.target.closest('[data-example]');if(!button)return;
+ const [s,g]=exampleIds(examples[Number(button.dataset.example)]);
+ $('start').value=s;$('goal').value=g;compare();document.querySelector('.workspace').scrollIntoView({behavior:'smooth',block:'start'});
+});
+$('run-study').addEventListener('click',async()=>{
+ if(studyBusy)return;studyBusy=true;stop();$('run-study').disabled=true;$('export-study').disabled=true;
+ try {
+  for(let i=0;i<study.length;i++) {
+   $('study-status').textContent=`Measuring route ${i+1} of ${study.length}…`;
+   await new Promise(resolve=>setTimeout(resolve,40));
+   study[i].timing=benchmark(study[i].startId,study[i].goalId);study[i].measuredAt=new Date().toISOString();renderStudy();
+  }
+  $('study-status').textContent=`Measured on this device at ${new Date().toLocaleTimeString()}. Search: median of 15 batches × 100 runs after warm-up, with no animation. Goal preparation: one timed sample per route, excluded from search. One-time landmark preparation: ${micros(study[0].timing.landmarkSetupMs)} µs, shared across routes. Small times are noisy; 0.0 means below displayed precision. Storage is estimated, not browser RAM.`;
+  $('export-study').disabled=false;
+ } catch { $('study-status').textContent='Measurement could not finish. Please try again.'; }
+ finally {studyBusy=false;$('run-study').disabled=false;}
+});
+$('export-study').addEventListener('click',()=>{
+ if(studyBusy||study.some(r=>!r.timing))return;
+ const rows=[['start','goal','algorithm','cost_km','expanded_cities','median_search_us','goal_preparation_us_single_sample','one_time_landmark_preparation_us','estimated_retained_storage_bytes','storage_note','measured_at']];
+ for(const row of study)for(const a of ['ucs','astar'])rows.push([row.start,row.goal,a,row[a].cost,row[a].expanded,micros(row.timing[a]),a==='astar'?micros(row.timing.goalSetupMs):'',a==='astar'?micros(row.timing.landmarkSetupMs):'',row[a].searchBytes+row[a].heuristicBytes,'Payload model; excludes object overhead, temporary preparation and visualization',row.measuredAt||'']);
+ const csv=rows.map(row=>row.map(value=>'"'+String(value).replaceAll('"','""')+'"').join(',')).join('\r\n');
+ const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download='romania-search-comparison.csv';link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+});
+$('check-pairs').addEventListener('click',async()=>{
+ const button=$('check-pairs');button.disabled=true;$('pair-evidence').textContent='Comparing all city pairs…';
+ await new Promise(resolve=>setTimeout(resolve,40));
+ try {const e=allPairsEvidence();$('pair-evidence').innerHTML=`<div class="evidence-grid"><div><strong>${e.agree} / ${e.pairs}</strong><span>matching path costs</span></div><div><strong>${e.fewer}</strong><span>pairs with fewer A* expansions</span></div><div><strong>${e.equal}</strong><span>pairs with equal expansions</span></div><div><strong>${e.hopStronger}</strong><span>pairs with a stronger hop bound</span></div></div><p class="small-note">A* expands more cities in ${e.more} pairs. These results describe this map and the current alphabetical tie-breaking, not a guarantee of faster runtime. Landmark preprocessing can give exact bounds on some routes, including those to or from a landmark.</p>`;}
+ catch {$('pair-evidence').textContent='Comparison could not finish. Please try again.';}
+ finally {button.disabled=false;}
+});
+renderStudy();
 $('run').addEventListener('click',compare);
 for(const id of ['start','goal'])$(id).addEventListener('change',compare);
 $('swap').addEventListener('click',()=>{const s=$('start').value;$('start').value=$('goal').value;$('goal').value=s;compare();});
-for(const input of document.querySelectorAll('input[name=algorithm]'))input.addEventListener('change',()=>{stop();algorithm=input.value;index=-1;render();});
-function advance(){if(index>=results[algorithm].steps.length-1){stop();return;}index++;render();if(index===results[algorithm].steps.length-1)stop();}
+for(const input of document.querySelectorAll('input[name=algorithm]'))input.addEventListener('change',()=>{stop();algorithm=input.value;index=-1;preview=false;render();});
+function advance(){if(preview){index=-1;preview=false;}if(index>=results[algorithm].steps.length-1){stop();return;}index++;render();if(index===results[algorithm].steps.length-1)stop();}
 $('step').addEventListener('click',()=>{stop();advance();});
 function play(){if(timer){stop();return;}if(index>=results[algorithm].steps.length-1)index=-1;advance();if(index<results[algorithm].steps.length-1){$('play').textContent='Pause';timer=setInterval(advance,Number($('speed').value));}}
 $('play').addEventListener('click',play);$('speed').addEventListener('change',()=>{if(timer){stop();play();}});
-$('timeline').addEventListener('input',()=>{stop();index=Number($('timeline').value)-1;render();});
-$('benchmark').addEventListener('click',async()=>{stop();const button=$('benchmark');button.disabled=true;button.textContent='Measuring…';await new Promise(resolve=>setTimeout(resolve,40));try{timings=benchmark(start,goal);renderResults();}finally{button.disabled=false;button.textContent='Measure runtime';}});
+$('timeline').addEventListener('input',()=>{stop();index=Number($('timeline').value)-1;preview=false;render();});
+$('benchmark').addEventListener('click',async()=>{stop();const measuredStart=start,measuredGoal=goal;const button=$('benchmark');button.disabled=true;button.textContent='Measuring…';await new Promise(resolve=>setTimeout(resolve,40));try{const measured=benchmark(measuredStart,measuredGoal);if(start===measuredStart&&goal===measuredGoal){timings=measured;renderResults();}}finally{button.disabled=false;button.textContent='Measure runtime';}});
 if(repositoryUrl&&/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/.test(repositoryUrl)){const a=document.createElement('a');a.href=repositoryUrl;a.textContent='View source on GitHub';a.target='_blank';a.rel='noopener noreferrer';$('repository').append(a);}else{$('repository').textContent='GitHub repository: connection pending';}
 compare();
 // Optional browser-agent interface; normal controls work without WebMCP support.
