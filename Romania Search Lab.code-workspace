@@ -1,0 +1,48 @@
+{
+  "folders": [
+    { "name": "Romania Search Lab", "path": "." }
+  ],
+  "tasks": {
+    "version": "2.0.0",
+    "tasks": [
+      {
+        "label": "Start Romania Search Lab",
+        "type": "process",
+        "command": "npm",
+        "args": ["start"],
+        "options": { "cwd": "${workspaceFolder}/romania-lab" },
+        "problemMatcher": [],
+        "presentation": { "reveal": "always", "panel": "dedicated" }
+      },
+      {
+        "label": "Test all city pairs",
+        "type": "process",
+        "command": "npm",
+        "args": ["test"],
+        "options": { "cwd": "${workspaceFolder}/romania-lab" },
+        "group": { "kind": "test", "isDefault": true },
+        "problemMatcher": [],
+        "presentation": { "reveal": "always", "panel": "dedicated" }
+      }
+    ]
+  },
+  "launch": {
+    "version": "0.2.0",
+    "configurations": [
+      {
+        "name": "Run Romania Search Lab",
+        "type": "node",
+        "request": "launch",
+        "program": "${workspaceFolder}/romania-lab/server.mjs",
+        "cwd": "${workspaceFolder}/romania-lab",
+        "console": "integratedTerminal",
+        "skipFiles": ["<node_internals>/**"],
+        "serverReadyAction": {
+          "pattern": "Local: (https?://\\S+)",
+          "uriFormat": "%s",
+          "action": "openExternally"
+        }
+      }
+    ]
+  }
+}
