@@ -1,26 +1,720 @@
 <!doctype html>
-<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="description" content="Explore blind and heuristic search on Romania's road map. Compare Uniform-Cost Search and A* with any start and goal city."><meta name="theme-color" content="#102720"><title>Romania Search Lab</title><link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23102720'/%3E%3Cpath d='M8 23 15 9 25 19' fill='none' stroke='%23b8ec71' stroke-width='3'/%3E%3Cg fill='%23b8ec71'%3E%3Ccircle cx='8' cy='23' r='3'/%3E%3Ccircle cx='15' cy='9' r='3'/%3E%3Ccircle cx='25' cy='19' r='3'/%3E%3C/g%3E%3C/svg%3E"><link rel="stylesheet" href="styles.css?v=20261012-compare"><script type="module" src="app.js?v=20261012-compare"></script></head>
-<body><header class="header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true">⌁</span> ROMANIA <span>SEARCH LAB</span></a><span class="course-label">INTRODUCTION TO AI <span class="slash">/</span> 2026</span><nav aria-label="Page sections"><a href="#comparison" class="quiet-link">Compare searches</a><a href="#method" class="quiet-link">How it works</a></nav></header>
-<main><div class="page-heading"><div><p class="eyebrow">20 CITIES · 23 ROADS · TWO WAYS TO SEARCH</p><h1>Romania search explorer.</h1><p class="intro">Choose two cities. Watch a search unfold. See what a heuristic changes.</p></div><div class="project-label"><span>01 / SEARCH EXPLORER</span><p>The Romania<br>pathfinding problem</p></div></div>
-<section class="workspace" aria-label="Pathfinding explorer"><aside class="controls"><div class="panel-title"><span class="section-number">01</span><h2>Plan a route</h2></div><label for="start">Starting city</label><select id="start"></select><button id="swap" class="swap" aria-label="Swap start and goal cities">⇅ <span>Swap cities</span></button><label for="goal">Destination</label><select id="goal"></select><fieldset><legend>View search</legend><label class="algorithm-option"><input type="radio" name="algorithm" value="ucs"><span><strong>Uniform-Cost</strong><small>Blind search · lowest cost first</small></span><span class="algorithm-tag">UCS</span></label><label class="algorithm-option"><input type="radio" name="algorithm" value="astar" checked><span><strong>A* Search</strong><strong>Tri-Anchor + Hop</strong><small>Custom heuristic</small></span><span class="algorithm-tag">A*</span></label></fieldset><button id="run" class="primary">Compare searches</button><button id="explain-search" class="outline-button explain-button">Explain search</button><p class="control-note">Compare both searches side by side, or use this map to inspect one search.</p><div class="route-summary"><p class="eyebrow">OPTIMAL RESULT</p><strong id="route-cost">—</strong><p id="route-description"></p></div></aside>
-<div class="map-panel"><div class="map-header"><div><h2>Romania road network</h2><p>Road distances in kilometres · schematic layout</p></div><span class="pill" id="map-algorithm">A* SEARCH</span></div><div class="view-toolbar"><span id="view-state">SEARCH READY</span><button id="preview" class="text-button" aria-pressed="false">Preview final route</button></div><div class="map-container"><svg id="map" viewBox="0 0 1020 710" role="img" aria-labelledby="map-title map-desc"><title id="map-title">Romania road network</title><desc id="map-desc">Twenty cities connected by twenty-three undirected roads. Use the city selectors to choose your route.</desc></svg></div><p class="map-scroll-note">Scroll sideways on the map to see all cities.</p><div class="map-legend"><span><i class="legend-dot start"></i>Start</span><span><i class="legend-dot goal"></i>Goal</span><span><i class="legend-line"></i><span id="path-legend">Current path</span></span><span><i class="legend-dot explored"></i>Explored</span><span><i class="legend-dot frontier"></i>Frontier</span></div><div class="playback"><button id="play" class="play-button">Play search</button><button id="reset" class="step-button" aria-label="Reset search playback">Reset</button><button id="step" class="step-button" aria-label="Advance one search step">Step</button><label class="sr-only" for="timeline">Search step</label><input type="range" id="timeline" min="0" value="0" max="1"><span id="step-label">Ready</span><label class="sr-only" for="speed">Playback speed</label><select id="speed"><option value="900">1×</option><option value="450" selected>2×</option><option value="180">5×</option></select></div></div><aside class="decision-panel" aria-label="Current search decision"><div class="decision-heading"><p class="eyebrow">LIVE EXPLANATION</p><span id="decision-count">Ready</span></div><h2 id="decision-title">Ready to explore</h2><p id="decision-text"></p><div class="decision-math" id="decision-math"></div><details class="bounds-details" open><summary>Where does h(n) come from?</summary><div id="bound-breakdown"></div></details><div class="next-cities"><h3>Next in the frontier</h3><p class="small-note" id="frontier-caption">Before the first step · lowest priority first</p><ol id="next-frontier"></ol></div><p class="small-note">g = cost so far · h = remaining estimate<br>All costs and bounds are in kilometres.</p></aside></section>
-<section id="comparison" class="results-section" aria-labelledby="comparison-title"><div class="section-heading"><div><p class="eyebrow">02 / THE COMPARISON</p><h2 id="comparison-title" tabindex="-1">UCS and A* side by side</h2></div><button class="outline-button" id="benchmark">Measure runtime</button></div><p id="comparison-route" class="comparison-route"></p><p class="section-intro">One tick selects one frontier city in each unfinished search. A finished search holds its final route. Animation speed does not represent runtime.</p><div class="comparison-toolbar"><button id="compare-play" class="play-button">Play both</button><button id="compare-step" class="step-button">Step both</button><button id="compare-reset" class="step-button">Reset both</button><label for="compare-timeline">Search tick</label><input type="range" id="compare-timeline" min="0" value="0" max="1"><output id="compare-tick">Ready</output><label for="compare-speed">Speed</label><select id="compare-speed"><option value="900">1×</option><option value="450" selected>2×</option><option value="180">5×</option></select></div><div class="comparison-maps"><article class="comparison-search" aria-labelledby="ucs-compare-title"><header><h3 id="ucs-compare-title">Uniform-Cost Search</h3><span id="ucs-compare-status" class="pill">READY</span></header><p class="comparison-rule">Lowest cost so far · priority = g</p><div class="comparison-map-scroll"><svg id="ucs-compare-map" class="comparison-map" viewBox="0 0 1020 710" role="img" aria-label="Uniform-Cost Search search map"></svg></div><div class="comparison-decision"><h4 id="ucs-compare-current">Ready</h4><p id="ucs-compare-math" class="comparison-math"></p><p id="ucs-compare-why"></p><div class="comparison-counts" id="ucs-compare-counts"></div><details><summary>Frontier after this selection</summary><ol id="ucs-compare-frontier" class="comparison-frontier"></ol></details></div></article><article class="comparison-search" aria-labelledby="astar-compare-title"><header><h3 id="astar-compare-title">A* · Tri-Anchor + Hop</h3><span id="astar-compare-status" class="pill">READY</span></header><p class="comparison-rule">Cost so far + remaining estimate · priority = g + h</p><div class="comparison-map-scroll"><svg id="astar-compare-map" class="comparison-map" viewBox="0 0 1020 710" role="img" aria-label="A* · Tri-Anchor + Hop search map"></svg></div><div class="comparison-decision"><h4 id="astar-compare-current">Ready</h4><p id="astar-compare-math" class="comparison-math"></p><p id="astar-compare-why"></p><div class="comparison-counts" id="astar-compare-counts"></div><details><summary>Frontier after this selection</summary><ol id="astar-compare-frontier" class="comparison-frontier"></ol></details></div></article></div><div class="map-legend"><span><i class="legend-dot start"></i>Start</span><span><i class="legend-dot goal"></i>Goal</span><span><i class="legend-dot explored"></i>Explored</span><span><i class="legend-dot frontier"></i>Frontier</span><span><i class="legend-line"></i>Path to selected city</span></div><p class="small-note">The ring marks the selected city. Exploring a city examines possible routes; it does not mean physically travelling there.</p><h3 class="comparison-results-title">Final results for this route</h3><div class="results-grid" id="results"></div><p class="measurement-note" id="timing-note">Runtime is measured separately from animation. Memory figures model stored search data; they are not browser heap measurements.</p><div class="insight" id="insight" role="status" aria-live="polite"></div></section>
-<section class="storage-section"><details><summary>What do the storage figures include?</summary><p>Exact typed-array payloads plus a model of frontier storage. These are estimates of retained algorithm data, not measured browser RAM or peak allocation.</p><div class="table-scroll"><table><caption>Storage breakdown for the selected route, in bytes</caption><thead><tr><th scope="col">Component</th><th scope="col">UCS</th><th scope="col">A*</th></tr></thead><tbody id="storage-breakdown"></tbody></table></div><p class="small-note">Excluded: JavaScript object overhead, temporary preparation data, the shared map, and animation history. Frontier entries assume 8 bytes each. Both searches allocate an entry for every city in their cost, parent, and explored arrays.</p></details></section>
-<section id="experiments" class="experiment-section" aria-labelledby="experiment-title"><div class="section-heading"><div><p class="eyebrow">03 / TEST THE DIFFERENCE</p><h2 id="experiment-title">Compare more than one journey</h2></div><div class="experiment-actions"><button class="outline-button" id="run-study">Measure five routes</button><button class="outline-button" id="export-study" disabled>Download CSV</button></div></div><p class="section-intro">A familiar example, a different destination, a stronger hop bound, a reverse route, and a zero-distance case. Choose a route to explore it on the map.</p><div class="table-scroll experiment-table"><table><caption>UCS and A* results · runtime in microseconds (µs), storage in bytes (B)</caption><thead><tr><th scope="col">Route / purpose</th><th scope="col">Search</th><th scope="col">Cost (km)</th><th scope="col">Expanded</th><th scope="col">Search (µs)</th><th scope="col">Goal prep (µs)</th><th scope="col">Est. storage (B)</th></tr></thead><tbody id="study-results"></tbody></table></div><p id="study-status" class="measurement-note" role="status">Times have not been measured. Run the comparison on your device before recording results.</p><details class="evidence-details"><summary>Check all 400 start–destination pairs</summary><p>Compare costs and expansions across the entire map, including 20 start = goal cases. This checks agreement between the searches; the repository tests separately verify optimality against Floyd–Warshall.</p><button id="check-pairs" class="outline-button">Run all-pairs comparison</button><div id="pair-evidence" role="status"></div></details></section>
-<section class="trace-section"><div class="trace-heading"><div><p class="eyebrow">04 / INSIDE THE SEARCH</p><h2 id="trace-title">Follow the next decision.</h2></div><span id="current-node" class="pill"></span></div><div class="trace-grid"><div><h3>Frontier <span>Waiting to be explored</span></h3><div class="table-wrap"><table><thead><tr><th>City</th><th>g(n)</th><th>h(n)</th><th>Priority</th></tr></thead><tbody id="frontier"></tbody></table></div></div><div class="trace-details"><p class="eyebrow">PATH TO CURRENT CITY</p><p id="current-path"></p><p class="eyebrow">EXPLORED CITIES</p><div id="explored" class="chips"></div></div></div></section>
-<section id="method" class="method-section"><div><p class="eyebrow">05 / THE IDEA BEHIND IT</p><h2>Tri-Anchor + Hop</h2><p>A custom remaining-distance estimate for A*. Three reference cities and a minimum road count provide four lower bounds. We keep the strongest one.</p><div class="formula">UCS: f(n) = g(n)<br>A*: f(n) = g(n) + h(n)</div><p><strong>g(n)</strong> is the cost of the best route found so far from the start to city n. <strong>h(n)</strong> estimates the remaining cost from n to the selected goal. A* selects the frontier city with the lowest f(n).</p></div><div class="heuristic-card"><p class="eyebrow">THE COMBINED HEURISTIC</p><h3>Four bounds.<br>One remaining estimate.</h3><div class="formula small-formula">h(n, t) = max(<br> b<sub>Arad</sub>, b<sub>Neamt</sub>, b<sub>Eforie</sub>, 70 × H(n, t)<br>)</div><p><strong>t</strong> is the selected goal. <strong>H(n, t)</strong> is the fewest roads needed to reach it. Each <strong>b</strong> is a landmark distance bound, explained below. All four bounds are in kilometres.</p><div id="heuristic-example"></div><p class="small-note">This live calculation follows the city selected in the search playback.</p></div>
-<div class="heuristic-guide">
-<article class="guide-row"><div><p class="eyebrow">01 / THREE ANCHORS</p><h3>Distances from three reference cities</h3></div><div><p>“Tri” means three. Our anchors are <strong>Arad, Neamt, and Eforie</strong>, spread across the west, northeast, and southeast of the map. They give different reference points. This is a fixed design choice, not a claim that these are the best possible landmarks.</p><p>At startup, Dijkstra’s algorithm calculates the shortest road distance from each anchor to every city. Call that distance D(L, x), where L is an anchor and x is a city. For each anchor, calculate:</p><p class="guide-equation">b<sub>L</sub>(n, t) = |D(L, n) − D(L, t)|</p><p>The absolute difference tells us how far apart n and t must be, at minimum. If they are 140 km and 418 km from the same anchor, they must be at least 278 km apart by road. The route does not have to pass through that anchor.</p></div></article>
-<article class="guide-row"><div><p class="eyebrow">02 / THE HOP BOUND</p><h3>Count the roads still needed</h3></div><div><p>A <strong>hop</strong> means crossing one road to a neighboring city. A breadth-first search from the goal counts the fewest hops from every city, temporarily ignoring the different road lengths.</p><p class="guide-equation">hop bound = H(n, t) × 70 km</p><p>The shortest road in this map is <strong>Lugoj–Mehadia, 70 km</strong>. If every possible route needs at least two roads, and every road is at least 70 km, the remaining journey must cost at least 140 km. The route with the fewest roads may differ from the route with the lowest total distance.</p></div></article>
-<article class="guide-row"><div><p class="eyebrow">03 / WHY MAXIMUM?</p><h3>Keep the strongest safe estimate</h3></div><div><p>Each bound describes the same remaining journey. If the four bounds are 43, 43, 43, and 140 km, we know the journey must be at least <strong>140 km</strong>. Taking the maximum retains the most useful information without exceeding the true shortest distance.</p><p>Adding the bounds could count the same distance multiple times and overestimate. “Tri-Anchor + Hop” names the combination of techniques. Within h, we use <strong>max</strong>. The addition happens in A* priority: <strong>f = g + h</strong>.</p></div></article>
-<article class="guide-row"><div><p class="eyebrow">04 / WORKED EXAMPLES</p><h3>How the numbers guide A*</h3></div><div><p><strong>Arad to Bucharest, considering Sibiu:</strong> the route found to Sibiu costs g = 140 km. The remaining estimate uses Sibiu and Bucharest:</p><div class="table-scroll"><table class="guide-table"><caption>Bounds at Sibiu with Bucharest as the goal</caption><thead><tr><th scope="col">Component</th><th scope="col">Calculation</th><th scope="col">Bound</th></tr></thead><tbody><tr><th scope="row">Arad anchor</th><td>|140 − 418|</td><td>278 km</td></tr><tr><th scope="row">Neamt anchor</th><td>|684 − 406|</td><td>278 km</td></tr><tr><th scope="row">Eforie anchor</th><td>|547 − 269|</td><td>278 km</td></tr><tr><th scope="row">Hop count</th><td>2 × 70</td><td>140 km</td></tr></tbody></table></div><p class="guide-equation">h(Sibiu) = max(278, 278, 278, 140) = 278 km<br>f(Sibiu) = 140 + 278 = 418 km</p><p>The two-hop route is through Fagaras. The cheapest remaining route uses three roads through Rimnicu Vilcea and Pitesti. The estimate happens to be exact here because Arad is a landmark on the optimal route.</p><p><strong>Where Hop helps: Zerind to Timisoara.</strong> All three landmark bounds are 43 km. The minimum is two hops, giving 140 km. The combination therefore raises h from 43 to <strong>140 km</strong>, still below the actual shortest distance of <strong>193 km</strong>.</p><p class="small-note">h comes from the bounds for the current city and goal. It is not generally “the initial estimate minus g.” Priority can change between cities. At the goal h = 0, so f = g.</p></div></article>
-<article class="guide-row"><div><p class="eyebrow">05 / THE CODE</p><h3>Preparation, then priority</h3></div><div><ol><li><strong>Once per map:</strong> build the three landmark distance tables with Dijkstra.</li><li><strong>For the chosen goal:</strong> run BFS to count hops and combine the four bounds for every city. Any of the 20 cities can be the goal.</li><li><strong>During A*:</strong> update g using the real road costs and select the lowest g + h. The prepared h for a city stays fixed for that goal and map.</li></ol><details class="guide-details"><summary>View the heuristic function used by this app</summary><pre><code>export function heuristicFor(goal){
- validateCity(goal);
- const hops=new Int16Array(cities.length).fill(-1);hops[goal]=0;const q=[goal];
- for(let i=0;i&lt;q.length;i++)for(const e of graph[q[i]])if(hops[e.id]===-1){hops[e.id]=hops[q[i]]+1;q.push(e.id);}
- return Float64Array.from(cities,(_,n)=&gt;Math.max(minimumEdge*hops[n],...landmarkTables.map(d=&gt;Math.abs(d[n]-d[goal]))));
-}</code></pre><p><code>minimumEdge</code> is the minimum road cost, 70 here. <code>landmarkTables</code> contains the three Dijkstra distance tables. <code>q</code> is the BFS queue. <code>Math.abs</code> calculates each anchor bound and <code>Math.max</code> selects the largest.</p><a class="quiet-link" href="https://github.com/zenm11/AI-Pathfinding/blob/main/romania-lab/dist/search.js">Read the full search implementation on GitHub</a></details></div></article>
-<article class="guide-row"><div><p class="eyebrow">06 / CORRECTNESS AND TRADEOFFS</p><h3>Useful guidance has a cost</h3></div><div><p><strong>Admissible</strong> means h never exceeds the true shortest remaining distance. <strong>Consistent</strong> means h(u) ≤ road cost(u, v) + h(v) across every road. Both hold for our bounds on this undirected map, and h is zero at the goal. A* therefore preserves the optimal path cost when it selects the goal from the frontier.</p><details class="guide-details"><summary>Why these properties hold</summary><p>The triangle inequality gives |D(L, u) − D(L, t)| ≤ D(u, t). Across a road of cost w, a landmark bound changes by at most w. The hop counts satisfy H(u, t) ≤ 1 + H(v, t). Multiplying by 70 preserves consistency because every road costs at least 70. Taking the maximum preserves both admissibility and consistency.</p></details><p>Guidance can reduce city expansions, but preparing and storing the bounds adds work. A* is <strong>not guaranteed to run faster</strong>, especially on a 20-city map. Compare measured search time, preparation time, expansions, and estimated storage separately. When roads change, recompute the bounds.</p><p><strong>What is custom?</strong> The name, fixed three-anchor choice, and combination with the hop bound describe this project’s heuristic. A* and landmark bounds are established ideas. We do not claim a new search algorithm. The core landmark technique appears in <a href="https://www.microsoft.com/en-us/research/publication/computing-the-shortest-path-a-search-meets-graph-theory-2/">Goldberg and Harrelson’s work on A*, landmarks, and the triangle inequality</a>.</p><p class="small-note">The repository tests compare all 400 ordered start–goal pairs against an independent shortest-path calculation and check the heuristic’s bounds and consistency. For a fair demonstration, include a route such as Lugoj to Vaslui, where neither endpoint is a landmark.</p></div></article>
-</div></section>
-<section class="methodology"><details><summary>How the comparison is measured</summary><p><strong>Path cost:</strong> the sum of road distances. <strong>Expanded nodes:</strong> cities whose outgoing roads were examined; selecting the goal does not count as an expansion. Ties use alphabetical city order for both algorithms.</p><p><strong>Runtime:</strong> median per-search duration across 15 batches of 100 runs, after 100 warm-up runs per algorithm. Execution order alternates by batch. Animation and trace recording are excluded. A* goal preparation and one-time landmark preparation are reported separately. These tiny searches are sensitive to timer precision, browser activity, and hardware; A* may not be faster.</p><p><strong>Memory model:</strong> typed arrays for costs (160 B), parents (40 B), and explored flags (20 B), plus 8 B per peak frontier entry. A* additionally retains 480 B of landmark distances and 160 B of goal heuristic values. These figures exclude JavaScript object overhead, temporary preprocessing storage, map data, and visualization history. Peak stored cities and frontier size are also reported. This is a reproducible storage estimate, not a measurement of process RAM.</p></details></section>
-</main><dialog id="explain-dialog" aria-labelledby="explain-title"><div class="explain-top"><p class="eyebrow">EXPLAIN SEARCH</p><button id="explain-close" class="step-button" autofocus>Close explanation</button></div><p id="explain-progress" class="small-note"></p><h2 id="explain-title"></h2><div id="explain-content"></div><div class="explain-navigation"><button id="explain-back" class="outline-button">Back</button><button id="explain-next" class="primary">Next</button></div></dialog><footer><div class="brand small">ROMANIA <span>SEARCH LAB</span></div><span>Artificial Intelligence · Search & problem solving</span><span id="repository"></span></footer><div class="sr-only" id="announcement" role="status" aria-live="polite"></div></body></html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta
+      name="description"
+      content="Explore blind and heuristic search on Romania's road map. Compare Uniform-Cost Search and A* with any start and goal city."
+    />
+    <meta name="theme-color" content="#102720" />
+    <title>Romania Search Lab</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23102720'/%3E%3Cpath d='M8 23 15 9 25 19' fill='none' stroke='%23b8ec71' stroke-width='3'/%3E%3Cg fill='%23b8ec71'%3E%3Ccircle cx='8' cy='23' r='3'/%3E%3Ccircle cx='15' cy='9' r='3'/%3E%3Ccircle cx='25' cy='19' r='3'/%3E%3C/g%3E%3C/svg%3E"
+    />
+    <link rel="stylesheet" href="styles.css?v=20261012-compare" />
+    <script type="module" src="app.js?v=20261012-compare"></script>
+  </head>
+  <body>
+    <header class="header">
+      <a class="brand" href="./"
+        ><span class="brand-mark" aria-hidden="true">⌁</span> ROMANIA
+        <span>SEARCH LAB</span></a
+      ><span class="course-label"
+        >INTRODUCTION TO AI <span class="slash">/</span> 2026</span
+      >
+      <nav aria-label="Page sections">
+        <a href="#comparison" class="quiet-link">Compare searches</a
+        ><a href="#method" class="quiet-link">How it works</a>
+      </nav>
+    </header>
+    <main>
+      <div class="page-heading">
+        <div>
+          <p class="eyebrow">20 CITIES · 23 ROADS · TWO WAYS TO SEARCH</p>
+          <h1>Romania search explorer.</h1>
+          <p class="intro">
+            Choose two cities. Watch a search unfold. See what a heuristic changes.
+          </p>
+        </div>
+        <div class="project-label">
+          <span>01 / SEARCH EXPLORER</span>
+          <p>The Romania<br />pathfinding problem</p>
+        </div>
+      </div>
+      <section class="workspace" aria-label="Pathfinding explorer">
+        <aside class="controls">
+          <div class="panel-title">
+            <span class="section-number">01</span>
+            <h2>Plan a route</h2>
+          </div>
+          <label for="start">Starting city</label
+          ><select id="start"></select
+          ><button id="swap" class="swap" aria-label="Swap start and goal cities">
+            ⇅ <span>Swap cities</span></button
+          ><label for="goal">Destination</label
+          ><select id="goal"></select>
+          <fieldset>
+            <legend>View search</legend>
+            <label class="algorithm-option"
+              ><input type="radio" name="algorithm" value="ucs" /><span
+                ><strong>Uniform-Cost</strong
+                ><small>Blind search · lowest cost first</small></span
+              ><span class="algorithm-tag">UCS</span></label
+            ><label class="algorithm-option"
+              ><input type="radio" name="algorithm" value="astar" checked /><span
+                ><strong>A* Search</strong><strong>Tri-Anchor + Hop</strong
+                ><small>Custom heuristic</small></span
+              ><span class="algorithm-tag">A*</span></label
+            >
+          </fieldset>
+          <button id="run" class="primary">Compare searches</button
+          ><button id="explain-search" class="outline-button explain-button">
+            Explain search
+          </button>
+          <p class="control-note">
+            Compare both searches side by side, or use this map to inspect one search.
+          </p>
+          <div class="route-summary">
+            <p class="eyebrow">OPTIMAL RESULT</p>
+            <strong id="route-cost">—</strong>
+            <p id="route-description"></p>
+          </div>
+        </aside>
+        <div class="map-panel">
+          <div class="map-header">
+            <div>
+              <h2>Romania road network</h2>
+              <p>Road distances in kilometres · schematic layout</p>
+            </div>
+            <span class="pill" id="map-algorithm">A* SEARCH</span>
+          </div>
+          <div class="view-toolbar">
+            <span id="view-state">SEARCH READY</span
+            ><button id="preview" class="text-button" aria-pressed="false">
+              Preview final route
+            </button>
+          </div>
+          <div class="map-container">
+            <svg
+              id="map"
+              viewBox="0 0 1020 710"
+              role="img"
+              aria-labelledby="map-title map-desc"
+            >
+              <title id="map-title">Romania road network</title>
+              <desc id="map-desc">
+                Twenty cities connected by twenty-three undirected roads. Use the city
+                selectors to choose your route.
+              </desc>
+            </svg>
+          </div>
+          <p class="map-scroll-note">Scroll sideways on the map to see all cities.</p>
+          <div class="map-legend">
+            <span><i class="legend-dot start"></i>Start</span
+            ><span><i class="legend-dot goal"></i>Goal</span
+            ><span
+              ><i class="legend-line"></i><span id="path-legend">Current path</span></span
+            ><span><i class="legend-dot explored"></i>Explored</span
+            ><span><i class="legend-dot frontier"></i>Frontier</span>
+          </div>
+          <div class="playback">
+            <button id="play" class="play-button">Play search</button
+            ><button id="reset" class="step-button" aria-label="Reset search playback">
+              Reset</button
+            ><button id="step" class="step-button" aria-label="Advance one search step">
+              Step</button
+            ><label class="sr-only" for="timeline">Search step</label
+            ><input type="range" id="timeline" min="0" value="0" max="1" /><span
+              id="step-label"
+              >Ready</span
+            ><label class="sr-only" for="speed">Playback speed</label
+            ><select id="speed">
+              <option value="900">1×</option>
+              <option value="450" selected>2×</option>
+              <option value="180">5×</option>
+            </select>
+          </div>
+        </div>
+        <aside class="decision-panel" aria-label="Current search decision">
+          <div class="decision-heading">
+            <p class="eyebrow">LIVE EXPLANATION</p>
+            <span id="decision-count">Ready</span>
+          </div>
+          <h2 id="decision-title">Ready to explore</h2>
+          <p id="decision-text"></p>
+          <div class="decision-math" id="decision-math"></div>
+          <details class="bounds-details" open>
+            <summary>Where does h(n) come from?</summary>
+            <div id="bound-breakdown"></div>
+          </details>
+          <div class="next-cities">
+            <h3>Next in the frontier</h3>
+            <p class="small-note" id="frontier-caption">
+              Before the first step · lowest priority first
+            </p>
+            <ol id="next-frontier"></ol>
+          </div>
+          <p class="small-note">
+            g = cost so far · h = remaining estimate<br />All costs and bounds are in
+            kilometres.
+          </p>
+        </aside>
+      </section>
+      <section id="comparison" class="results-section" aria-labelledby="comparison-title">
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">02 / THE COMPARISON</p>
+            <h2 id="comparison-title" tabindex="-1">UCS and A* side by side</h2>
+          </div>
+          <button class="outline-button" id="benchmark">Measure runtime</button>
+        </div>
+        <p id="comparison-route" class="comparison-route"></p>
+        <p class="section-intro">
+          One tick selects one frontier city in each unfinished search. A finished search
+          holds its final route. Animation speed does not represent runtime.
+        </p>
+        <div class="comparison-toolbar">
+          <button id="compare-play" class="play-button">Play both</button
+          ><button id="compare-step" class="step-button">Step both</button
+          ><button id="compare-reset" class="step-button">Reset both</button
+          ><label for="compare-timeline">Search tick</label
+          ><input type="range" id="compare-timeline" min="0" value="0" max="1" /><output
+            id="compare-tick"
+            >Ready</output
+          ><label for="compare-speed">Speed</label
+          ><select id="compare-speed">
+            <option value="900">1×</option>
+            <option value="450" selected>2×</option>
+            <option value="180">5×</option>
+          </select>
+        </div>
+        <div class="comparison-maps">
+          <article class="comparison-search" aria-labelledby="ucs-compare-title">
+            <header>
+              <h3 id="ucs-compare-title">Uniform-Cost Search</h3>
+              <span id="ucs-compare-status" class="pill">READY</span>
+            </header>
+            <p class="comparison-rule">Lowest cost so far · priority = g</p>
+            <div class="comparison-map-scroll">
+              <svg
+                id="ucs-compare-map"
+                class="comparison-map"
+                viewBox="0 0 1020 710"
+                role="img"
+                aria-label="Uniform-Cost Search search map"
+              ></svg>
+            </div>
+            <div class="comparison-decision">
+              <h4 id="ucs-compare-current">Ready</h4>
+              <p id="ucs-compare-math" class="comparison-math"></p>
+              <p id="ucs-compare-why"></p>
+              <div class="comparison-counts" id="ucs-compare-counts"></div>
+              <details>
+                <summary>Frontier after this selection</summary>
+                <ol id="ucs-compare-frontier" class="comparison-frontier"></ol>
+              </details>
+            </div>
+          </article>
+          <article class="comparison-search" aria-labelledby="astar-compare-title">
+            <header>
+              <h3 id="astar-compare-title">A* · Tri-Anchor + Hop</h3>
+              <span id="astar-compare-status" class="pill">READY</span>
+            </header>
+            <p class="comparison-rule">
+              Cost so far + remaining estimate · priority = g + h
+            </p>
+            <div class="comparison-map-scroll">
+              <svg
+                id="astar-compare-map"
+                class="comparison-map"
+                viewBox="0 0 1020 710"
+                role="img"
+                aria-label="A* · Tri-Anchor + Hop search map"
+              ></svg>
+            </div>
+            <div class="comparison-decision">
+              <h4 id="astar-compare-current">Ready</h4>
+              <p id="astar-compare-math" class="comparison-math"></p>
+              <p id="astar-compare-why"></p>
+              <div class="comparison-counts" id="astar-compare-counts"></div>
+              <details>
+                <summary>Frontier after this selection</summary>
+                <ol id="astar-compare-frontier" class="comparison-frontier"></ol>
+              </details>
+            </div>
+          </article>
+        </div>
+        <div class="map-legend">
+          <span><i class="legend-dot start"></i>Start</span
+          ><span><i class="legend-dot goal"></i>Goal</span
+          ><span><i class="legend-dot explored"></i>Explored</span
+          ><span><i class="legend-dot frontier"></i>Frontier</span
+          ><span><i class="legend-line"></i>Path to selected city</span>
+        </div>
+        <p class="small-note">
+          The ring marks the selected city. Exploring a city examines possible routes; it
+          does not mean physically travelling there.
+        </p>
+        <h3 class="comparison-results-title">Final results for this route</h3>
+        <div class="results-grid" id="results"></div>
+        <p class="measurement-note" id="timing-note">
+          Runtime is measured separately from animation. Memory figures model stored
+          search data; they are not browser heap measurements.
+        </p>
+        <div class="insight" id="insight" role="status" aria-live="polite"></div>
+      </section>
+      <section class="storage-section">
+        <details>
+          <summary>What do the storage figures include?</summary>
+          <p>
+            Exact typed-array payloads plus a model of frontier storage. These are
+            estimates of retained algorithm data, not measured browser RAM or peak
+            allocation.
+          </p>
+          <div class="table-scroll">
+            <table>
+              <caption>
+                Storage breakdown for the selected route, in bytes
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Component</th>
+                  <th scope="col">UCS</th>
+                  <th scope="col">A*</th>
+                </tr>
+              </thead>
+              <tbody id="storage-breakdown"></tbody>
+            </table>
+          </div>
+          <p class="small-note">
+            Excluded: JavaScript object overhead, temporary preparation data, the shared
+            map, and animation history. Frontier entries assume 8 bytes each. Both
+            searches allocate an entry for every city in their cost, parent, and explored
+            arrays.
+          </p>
+        </details>
+      </section>
+      <section
+        id="experiments"
+        class="experiment-section"
+        aria-labelledby="experiment-title"
+      >
+        <div class="section-heading">
+          <div>
+            <p class="eyebrow">03 / TEST THE DIFFERENCE</p>
+            <h2 id="experiment-title">Compare more than one journey</h2>
+          </div>
+          <div class="experiment-actions">
+            <button class="outline-button" id="run-study">Measure five routes</button
+            ><button class="outline-button" id="export-study" disabled>
+              Download CSV
+            </button>
+          </div>
+        </div>
+        <p class="section-intro">
+          A familiar example, a different destination, a stronger hop bound, a reverse
+          route, and a zero-distance case. Choose a route to explore it on the map.
+        </p>
+        <div class="table-scroll experiment-table">
+          <table>
+            <caption>
+              UCS and A* results · runtime in microseconds (µs), storage in bytes (B)
+            </caption>
+            <thead>
+              <tr>
+                <th scope="col">Route / purpose</th>
+                <th scope="col">Search</th>
+                <th scope="col">Cost (km)</th>
+                <th scope="col">Expanded</th>
+                <th scope="col">Search (µs)</th>
+                <th scope="col">Goal prep (µs)</th>
+                <th scope="col">Est. storage (B)</th>
+              </tr>
+            </thead>
+            <tbody id="study-results"></tbody>
+          </table>
+        </div>
+        <p id="study-status" class="measurement-note" role="status">
+          Times have not been measured. Run the comparison on your device before recording
+          results.
+        </p>
+        <details class="evidence-details">
+          <summary>Check all 400 start–destination pairs</summary>
+          <p>
+            Compare costs and expansions across the entire map, including 20 start = goal
+            cases. This checks agreement between the searches; the repository tests
+            separately verify optimality against Floyd–Warshall.
+          </p>
+          <button id="check-pairs" class="outline-button">
+            Run all-pairs comparison
+          </button>
+          <div id="pair-evidence" role="status"></div>
+        </details>
+      </section>
+      <section class="trace-section">
+        <div class="trace-heading">
+          <div>
+            <p class="eyebrow">04 / INSIDE THE SEARCH</p>
+            <h2 id="trace-title">Follow the next decision.</h2>
+          </div>
+          <span id="current-node" class="pill"></span>
+        </div>
+        <div class="trace-grid">
+          <div>
+            <h3>Frontier <span>Waiting to be explored</span></h3>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>City</th>
+                    <th>g(n)</th>
+                    <th>h(n)</th>
+                    <th>Priority</th>
+                  </tr>
+                </thead>
+                <tbody id="frontier"></tbody>
+              </table>
+            </div>
+          </div>
+          <div class="trace-details">
+            <p class="eyebrow">PATH TO CURRENT CITY</p>
+            <p id="current-path"></p>
+            <p class="eyebrow">EXPLORED CITIES</p>
+            <div id="explored" class="chips"></div>
+          </div>
+        </div>
+      </section>
+      <section id="method" class="method-section">
+        <div>
+          <p class="eyebrow">05 / THE IDEA BEHIND IT</p>
+          <h2>Tri-Anchor + Hop</h2>
+          <p>
+            A custom remaining-distance estimate for A*. Three reference cities and a
+            minimum road count provide four lower bounds. We keep the strongest one.
+          </p>
+          <div class="formula">UCS: f(n) = g(n)<br />A*: f(n) = g(n) + h(n)</div>
+          <p>
+            <strong>g(n)</strong> is the cost of the best route found so far from the
+            start to city n. <strong>h(n)</strong> estimates the remaining cost from n to
+            the selected goal. A* selects the frontier city with the lowest f(n).
+          </p>
+        </div>
+        <div class="heuristic-card">
+          <p class="eyebrow">THE COMBINED HEURISTIC</p>
+          <h3>Four bounds.<br />One remaining estimate.</h3>
+          <div class="formula small-formula">
+            h(n, t) = max(<br />
+            b<sub>Arad</sub>, b<sub>Neamt</sub>, b<sub>Eforie</sub>, 70 × H(n, t)<br />)
+          </div>
+          <p>
+            <strong>t</strong> is the selected goal. <strong>H(n, t)</strong> is the
+            fewest roads needed to reach it. Each <strong>b</strong> is a landmark
+            distance bound, explained below. All four bounds are in kilometres.
+          </p>
+          <div id="heuristic-example"></div>
+          <p class="small-note">
+            This live calculation follows the city selected in the search playback.
+          </p>
+        </div>
+        <div class="heuristic-guide">
+          <article class="guide-row">
+            <div>
+              <p class="eyebrow">01 / THREE ANCHORS</p>
+              <h3>Distances from three reference cities</h3>
+            </div>
+            <div>
+              <p>
+                “Tri” means three. Our anchors are
+                <strong>Arad, Neamt, and Eforie</strong>, spread across the west,
+                northeast, and southeast of the map. They give different reference points.
+                This is a fixed design choice, not a claim that these are the best
+                possible landmarks.
+              </p>
+              <p>
+                At startup, Dijkstra’s algorithm calculates the shortest road distance
+                from each anchor to every city. Call that distance D(L, x), where L is an
+                anchor and x is a city. For each anchor, calculate:
+              </p>
+              <p class="guide-equation">b<sub>L</sub>(n, t) = |D(L, n) − D(L, t)|</p>
+              <p>
+                The absolute difference tells us how far apart n and t must be, at
+                minimum. If they are 140 km and 418 km from the same anchor, they must be
+                at least 278 km apart by road. The route does not have to pass through
+                that anchor.
+              </p>
+            </div>
+          </article>
+          <article class="guide-row">
+            <div>
+              <p class="eyebrow">02 / THE HOP BOUND</p>
+              <h3>Count the roads still needed</h3>
+            </div>
+            <div>
+              <p>
+                A <strong>hop</strong> means crossing one road to a neighboring city. A
+                breadth-first search from the goal counts the fewest hops from every city,
+                temporarily ignoring the different road lengths.
+              </p>
+              <p class="guide-equation">hop bound = H(n, t) × 70 km</p>
+              <p>
+                The shortest road in this map is <strong>Lugoj–Mehadia, 70 km</strong>. If
+                every possible route needs at least two roads, and every road is at least
+                70 km, the remaining journey must cost at least 140 km. The route with the
+                fewest roads may differ from the route with the lowest total distance.
+              </p>
+            </div>
+          </article>
+          <article class="guide-row">
+            <div>
+              <p class="eyebrow">03 / WHY MAXIMUM?</p>
+              <h3>Keep the strongest safe estimate</h3>
+            </div>
+            <div>
+              <p>
+                Each bound describes the same remaining journey. If the four bounds are
+                43, 43, 43, and 140 km, we know the journey must be at least
+                <strong>140 km</strong>. Taking the maximum retains the most useful
+                information without exceeding the true shortest distance.
+              </p>
+              <p>
+                Adding the bounds could count the same distance multiple times and
+                overestimate. “Tri-Anchor + Hop” names the combination of techniques.
+                Within h, we use <strong>max</strong>. The addition happens in A*
+                priority: <strong>f = g + h</strong>.
+              </p>
+            </div>
+          </article>
+          <article class="guide-row">
+            <div>
+              <p class="eyebrow">04 / WORKED EXAMPLES</p>
+              <h3>How the numbers guide A*</h3>
+            </div>
+            <div>
+              <p>
+                <strong>Arad to Bucharest, considering Sibiu:</strong> the route found to
+                Sibiu costs g = 140 km. The remaining estimate uses Sibiu and Bucharest:
+              </p>
+              <div class="table-scroll">
+                <table class="guide-table">
+                  <caption>
+                    Bounds at Sibiu with Bucharest as the goal
+                  </caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Component</th>
+                      <th scope="col">Calculation</th>
+                      <th scope="col">Bound</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">Arad anchor</th>
+                      <td>|140 − 418|</td>
+                      <td>278 km</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Neamt anchor</th>
+                      <td>|684 − 406|</td>
+                      <td>278 km</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Eforie anchor</th>
+                      <td>|547 − 269|</td>
+                      <td>278 km</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">Hop count</th>
+                      <td>2 × 70</td>
+                      <td>140 km</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <p class="guide-equation">
+                h(Sibiu) = max(278, 278, 278, 140) = 278 km<br />f(Sibiu) = 140 + 278 =
+                418 km
+              </p>
+              <p>
+                The two-hop route is through Fagaras. The cheapest remaining route uses
+                three roads through Rimnicu Vilcea and Pitesti. The estimate happens to be
+                exact here because Arad is a landmark on the optimal route.
+              </p>
+              <p>
+                <strong>Where Hop helps: Zerind to Timisoara.</strong> All three landmark
+                bounds are 43 km. The minimum is two hops, giving 140 km. The combination
+                therefore raises h from 43 to <strong>140 km</strong>, still below the
+                actual shortest distance of <strong>193 km</strong>.
+              </p>
+              <p class="small-note">
+                h comes from the bounds for the current city and goal. It is not generally
+                “the initial estimate minus g.” Priority can change between cities. At the
+                goal h = 0, so f = g.
+              </p>
+            </div>
+          </article>
+          <article class="guide-row">
+            <div>
+              <p class="eyebrow">05 / THE CODE</p>
+              <h3>Preparation, then priority</h3>
+            </div>
+            <div>
+              <ol>
+                <li>
+                  <strong>Once per map:</strong> build the three landmark distance tables
+                  with Dijkstra.
+                </li>
+                <li>
+                  <strong>For the chosen goal:</strong> run BFS to count hops and combine
+                  the four bounds for every city. Any of the 20 cities can be the goal.
+                </li>
+                <li>
+                  <strong>During A*:</strong> update g using the real road costs and
+                  select the lowest g + h. The prepared h for a city stays fixed for that
+                  goal and map.
+                </li>
+              </ol>
+              <details class="guide-details">
+                <summary>View the heuristic function used by this app</summary>
+                >
+                <pre><code>export function heuristicFor(goal) {
+  validateCity(goal);
+  // BFS counts the fewest roads to the goal, ignoring road lengths.
+  const hops = new Int16Array(cities.length).fill(-1);
+  hops[goal] = 0;
+  const q = [goal];
+  for (let i = 0; i &lt; q.length; i++) {
+    for (const e of graph[q[i]]) {
+      if (hops[e.id] === -1) {
+        hops[e.id] = hops[q[i]] + 1;
+        q.push(e.id);
+      }
+    }
+  }
+  // Keep the strongest lower bound: minimum-hop cost or a landmark difference.
+  return Float64Array.from(cities, (_, n) =&gt;
+    Math.max(
+      minimumEdge * hops[n],
+      ...landmarkTables.map((d) =&gt; Math.abs(d[n] - d[goal])),
+    ),
+  );
+}</code></pre>
+                <p>
+                  <code>minimumEdge</code> is the minimum road cost, 70 here.
+                  <code>landmarkTables</code> contains the three Dijkstra distance tables.
+                  <code>q</code> is the BFS queue. <code>Math.abs</code> calculates each
+                  anchor bound and <code>Math.max</code> selects the largest.
+                </p>
+                <a
+                  class="quiet-link"
+                  href="https://github.com/zenm11/AI-Pathfinding/blob/main/romania-lab/dist/search.js"
+                  >Read the full search implementation on GitHub</a
+                >
+              </details>
+            </div>
+          </article>
+          <article class="guide-row">
+            <div>
+              <p class="eyebrow">06 / CORRECTNESS AND TRADEOFFS</p>
+              <h3>Useful guidance has a cost</h3>
+            </div>
+            <div>
+              <p>
+                <strong>Admissible</strong> means h never exceeds the true shortest
+                remaining distance. <strong>Consistent</strong> means h(u) ≤ road cost(u,
+                v) + h(v) across every road. Both hold for our bounds on this undirected
+                map, and h is zero at the goal. A* therefore preserves the optimal path
+                cost when it selects the goal from the frontier.
+              </p>
+              <details class="guide-details">
+                <summary>Why these properties hold</summary>
+                <p>
+                  The triangle inequality gives |D(L, u) − D(L, t)| ≤ D(u, t). Across a
+                  road of cost w, a landmark bound changes by at most w. The hop counts
+                  satisfy H(u, t) ≤ 1 + H(v, t). Multiplying by 70 preserves consistency
+                  because every road costs at least 70. Taking the maximum preserves both
+                  admissibility and consistency.
+                </p>
+              </details>
+              <p>
+                Guidance can reduce city expansions, but preparing and storing the bounds
+                adds work. A* is <strong>not guaranteed to run faster</strong>, especially
+                on a 20-city map. Compare measured search time, preparation time,
+                expansions, and estimated storage separately. When roads change, recompute
+                the bounds.
+              </p>
+              <p>
+                <strong>What is custom?</strong> The name, fixed three-anchor choice, and
+                combination with the hop bound describe this project’s heuristic. A* and
+                landmark bounds are established ideas. We do not claim a new search
+                algorithm. The core landmark technique appears in
+                <a
+                  href="https://www.microsoft.com/en-us/research/publication/computing-the-shortest-path-a-search-meets-graph-theory-2/"
+                  >Goldberg and Harrelson’s work on A*, landmarks, and the triangle
+                  inequality</a
+                >.
+              </p>
+              <p class="small-note">
+                The repository tests compare all 400 ordered start–goal pairs against an
+                independent shortest-path calculation and check the heuristic’s bounds and
+                consistency. For a fair demonstration, include a route such as Lugoj to
+                Vaslui, where neither endpoint is a landmark.
+              </p>
+            </div>
+          </article>
+        </div>
+      </section>
+      <section class="methodology">
+        <details>
+          <summary>How the comparison is measured</summary>
+          <p>
+            <strong>Path cost:</strong> the sum of road distances.
+            <strong>Expanded nodes:</strong> cities whose outgoing roads were examined;
+            selecting the goal does not count as an expansion. Ties use alphabetical city
+            order for both algorithms.
+          </p>
+          <p>
+            <strong>Runtime:</strong> median per-search duration across 15 batches of 100
+            runs, after 100 warm-up runs per algorithm. Execution order alternates by
+            batch. Animation and trace recording are excluded. A* goal preparation and
+            one-time landmark preparation are reported separately. These tiny searches are
+            sensitive to timer precision, browser activity, and hardware; A* may not be
+            faster.
+          </p>
+          <p>
+            <strong>Memory model:</strong> typed arrays for costs (160 B), parents (40 B),
+            and explored flags (20 B), plus 8 B per peak frontier entry. A* additionally
+            retains 480 B of landmark distances and 160 B of goal heuristic values. These
+            figures exclude JavaScript object overhead, temporary preprocessing storage,
+            map data, and visualization history. Peak stored cities and frontier size are
+            also reported. This is a reproducible storage estimate, not a measurement of
+            process RAM.
+          </p>
+        </details>
+      </section>
+    </main>
+    <dialog id="explain-dialog" aria-labelledby="explain-title">
+      <div class="explain-top">
+        <p class="eyebrow">EXPLAIN SEARCH</p>
+        <button id="explain-close" class="step-button" autofocus>
+          Close explanation
+        </button>
+      </div>
+      <p id="explain-progress" class="small-note"></p>
+      <h2 id="explain-title"></h2>
+      <div id="explain-content"></div>
+      <div class="explain-navigation">
+        <button id="explain-back" class="outline-button">Back</button
+        ><button id="explain-next" class="primary">Next</button>
+      </div>
+    </dialog>
+    <footer>
+      <div class="brand small">ROMANIA <span>SEARCH LAB</span></div>
+      <span>Artificial Intelligence · Search & problem solving</span
+      ><span id="repository"></span>
+    </footer>
+    <div class="sr-only" id="announcement" role="status" aria-live="polite"></div>
+  </body>
+</html>

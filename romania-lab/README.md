@@ -61,6 +61,18 @@ Memory is a **logical payload estimate**, not measured JavaScript heap or RAM: c
 - `tests/search.test.mjs`: independent correctness checks.
 - `docs/PRESENTATION.md`: 10–15 minute demonstration outline.
 
+## Code formatting
+
+The files in `dist/` are the editable source served directly by the website. They are not generated or minified build output. Open `dist/search.js` to follow the graph data, landmark preparation, heuristic, search loop, and benchmark in order.
+
+The repository's `.editorconfig` and `.prettierrc.json` keep indentation and formatting consistent. From the repository root, format the source with:
+
+```sh
+npx --yes prettier@3.6.2 --write "romania-lab/dist/*.{js,html,css}" "romania-lab/tests/*.mjs" romania-lab/server.mjs romania-lab/package.json
+```
+
+Prettier is only a development tool. Running the website and its tests still requires no dependency installation.
+
 ## Deployment
 
 The `dist` directory is a complete static site. It works on Sites, GitHub Pages, or any static host. The Sites manifest is in `.openai/hosting.json`; Sites hosting does not replace the assignment's requirement for a GitHub repository.

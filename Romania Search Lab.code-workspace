@@ -1,7 +1,5 @@
 {
-  "folders": [
-    { "name": "Romania Search Lab", "path": "." }
-  ],
+  "folders": [{ "name": "Romania Search Lab", "path": "." }],
   "tasks": {
     "version": "2.0.0",
     "tasks": [
@@ -12,7 +10,7 @@
         "args": ["start"],
         "options": { "cwd": "${workspaceFolder}/romania-lab" },
         "problemMatcher": [],
-        "presentation": { "reveal": "always", "panel": "dedicated" }
+        "presentation": { "reveal": "always", "panel": "dedicated" },
       },
       {
         "label": "Test all city pairs",
@@ -22,9 +20,9 @@
         "options": { "cwd": "${workspaceFolder}/romania-lab" },
         "group": { "kind": "test", "isDefault": true },
         "problemMatcher": [],
-        "presentation": { "reveal": "always", "panel": "dedicated" }
-      }
-    ]
+        "presentation": { "reveal": "always", "panel": "dedicated" },
+      },
+    ],
   },
   "launch": {
     "version": "0.2.0",
@@ -40,9 +38,9 @@
         "serverReadyAction": {
           "pattern": "Local: (https?://\\S+)",
           "uriFormat": "%s",
-          "action": "openExternally"
-        }
-      }
-    ]
-  }
+          "action": "openExternally",
+        },
+      },
+    ],
+  },
 }
