@@ -581,7 +581,7 @@
                 >
                 <pre><code>export function heuristicFor(goal) {
   validateCity(goal);
-  // BFS counts the fewest roads to the goal, ignoring road lengths.
+
   const hops = new Int16Array(cities.length).fill(-1);
   hops[goal] = 0;
   const q = [goal];
@@ -593,7 +593,7 @@
       }
     }
   }
-  // Keep the strongest lower bound: minimum-hop cost or a landmark difference.
+
   return Float64Array.from(cities, (_, n) =&gt;
     Math.max(
       minimumEdge * hops[n],

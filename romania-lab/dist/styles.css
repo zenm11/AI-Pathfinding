@@ -992,7 +992,6 @@ footer > span:last-child {
   }
 }
 
-/* Teaching and comparison views share the existing colour system. */
 .header nav {
   display: flex;
   gap: 22px;
@@ -1478,7 +1477,6 @@ button:disabled {
   }
 }
 
-/* Full heuristic explanation, with details available on demand. */
 #method {
   scroll-margin-top: 24px;
   row-gap: 32px;
@@ -1582,7 +1580,7 @@ button:disabled {
     font-size: 12px;
   }
 }
-/* Side-by-side search and a short guided explanation. */
+
 #comparison {
   scroll-margin-top: 24px;
 }

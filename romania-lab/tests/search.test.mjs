@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { cities, roads, graph, search, heuristicFor, benchmark } from '../dist/search.js';
-// Independent oracle: Floyd-Warshall dynamic programming, not either search.
+
 const n = cities.length;
 const oracle = Array.from({ length: n }, (_, i) =>
   Array.from({ length: n }, (_, j) => (i === j ? 0 : Infinity)),

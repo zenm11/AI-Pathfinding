@@ -17,7 +17,6 @@ import {
 } from './lab.js?v=20261012-compare';
 import { repositoryUrl } from './config.js';
 
-// UI state and DOM helpers
 const $ = (id) => document.getElementById(id);
 let start = 0,
   goal = 12,
@@ -78,7 +77,6 @@ function compare() {
     `Compared ${name(start)} to ${name(goal)}. Both routes cost ${results.ucs.cost} kilometres.`;
 }
 
-// Map rendering
 function renderMap(
   step,
   map = $('map'),
@@ -166,12 +164,11 @@ function renderMap(
   map.append(group);
 }
 
-// Result cards and single-search playback
 function renderResults() {
   $('results').innerHTML = ['ucs', 'astar']
     .map((a) => {
       const r = results[a];
-      return /* HTML */ `<article class="result-card ${a === algorithm ? 'active' : ''}">
+      return `<article class="result-card ${a === algorithm ? 'active' : ''}">
         <div class="result-header">
           <h3>${a === 'ucs' ? 'Uniform-Cost Search' : 'A* Search'}</h3>
           <span>${a === 'ucs' ? 'BLIND SEARCH' : 'TRI-ANCHOR + HOP'}</span>
@@ -231,7 +228,7 @@ function render() {
     ? frontier
         .map(
           (n) =>
-            /* HTML */ `<tr>
+            `<tr>
               <td>${name(n.id)}</td>
               <td>${n.g}</td>
               <td>${n.h}</td>
@@ -244,10 +241,10 @@ function render() {
     ? `${pathText(step.path)} · ${step.cost} km`
     : 'Press Play search or Step to inspect each decision.';
   $('explored').innerHTML =
-    step?.explored.map((id) => /* HTML */ `<span>${name(id)}</span>`).join('') ||
+    step?.explored.map((id) => `<span>${name(id)}</span>`).join('') ||
     '<span>Search has not started</span>';
   const parts = heuristicParts(step?.current ?? start, goal);
-  $('heuristic-example').innerHTML = /* HTML */ `<div class="example">
+  $('heuristic-example').innerHTML = `<div class="example">
     At ${name(step?.current ?? start)}, heading to ${name(goal)}:<br />landmark bounds
     ${parts.landmarks.map((p) => p.bound).join(', ')} km · hop bound ${parts.hopBound}
     km<br /><strong>h(n) = ${parts.h} km</strong>
@@ -284,8 +281,8 @@ function renderDecision(step) {
     ? `${pathText(r.path)}. Total: ${r.cost} km across ${r.path.length - 1} roads. Return to search or press Play to follow how it was found.`
     : d.text;
   $('decision-math').innerHTML = preview
-    ? /* HTML */ `<strong>${r.cost} km</strong><span>Final path cost</span>`
-    : /* HTML */ `<span>g <strong>${d.g}</strong></span
+    ? `<strong>${r.cost} km</strong><span>Final path cost</span>`
+    : `<span>g <strong>${d.g}</strong></span
         ><span
           >${algorithm === 'astar' ? '+ h' : 'h (unused)'} <strong>${d.h}</strong></span
         ><span>= priority <strong>${d.g + d.h}</strong></span>`;
@@ -305,7 +302,7 @@ function renderDecision(step) {
     ? '<p class="small-note">Return to search to inspect the estimate for each selected city.</p>'
     : algorithm === 'ucs'
       ? '<p class="small-note">UCS does not use an estimate. Its priority is only g(n), the cost so far.</p>'
-      : /* HTML */ `<p class="small-note">
+      : `<p class="small-note">
             ${name(d.node)} → ${name(goal)}<br />Each landmark expression is |distance to
             city − distance to goal|.
           </p>
@@ -313,12 +310,12 @@ function renderDecision(step) {
             ${bounds
               .map(
                 (b) =>
-                  /* HTML */ `<li class="${b.value === parts.h ? 'winning-bound' : ''}">
+                  `<li class="${b.value === parts.h ? 'winning-bound' : ''}">
                     <span>${b.label}<small>${b.calculation}</small></span
                     ><strong
-                      >${b.value}${b.value === parts.h
-                        ? '<small>MAX</small>'
-                        : ''}</strong
+                      >${b.value}${
+                        b.value === parts.h ? '<small>MAX</small>' : ''
+                      }</strong
                     >
                   </li>`,
               )
@@ -345,14 +342,13 @@ function renderDecision(step) {
           .slice(0, 3)
           .map(
             (n) =>
-              /* HTML */ `<li>
+              `<li>
                 <span>${name(n.id)}</span><strong>${n.g + n.h}</strong>
               </li>`,
           )
           .join('') || '<li>Frontier empty</li>';
 }
 
-// Storage breakdown and route experiments
 function renderStorage() {
   const u = storageBreakdown(results.ucs),
     a = storageBreakdown(results.astar);
@@ -368,14 +364,14 @@ function renderStorage() {
     rows
       .map(
         ([label, key]) =>
-          /* HTML */ `<tr>
+          `<tr>
             <td>${label}</td>
             <td>${u[key]}</td>
             <td>${a[key]}</td>
           </tr>`,
       )
       .join('') +
-    /* HTML */ `<tr class="total-row">
+    `<tr class="total-row">
       <td>Total estimated retained storage</td>
       <td>${results.ucs.searchBytes}</td>
       <td>${results.astar.searchBytes + results.astar.heuristicBytes}</td>
@@ -389,14 +385,16 @@ function renderStudy() {
       ['ucs', 'astar']
         .map(
           (a, j) =>
-            /* HTML */ `<tr>
-              ${j === 0
-                ? /* HTML */ `<th scope="rowgroup" rowspan="2">
+            `<tr>
+              ${
+                j === 0
+                  ? `<th scope="rowgroup" rowspan="2">
                     <button class="route-link" data-example="${i}">
                       ${row.start} → ${row.goal}</button
                     ><small>${row.reason}</small>
                   </th>`
-                : ''}
+                  : ''
+              }
               <td>${a === 'ucs' ? 'UCS' : 'A*'}</td>
               <td>${row[a].cost}</td>
               <td>${row[a].expanded}</td>
@@ -517,7 +515,7 @@ $('check-pairs').addEventListener('click', async () => {
   await new Promise((resolve) => setTimeout(resolve, 40));
   try {
     const e = allPairsEvidence();
-    $('pair-evidence').innerHTML = /* HTML */ `<div class="evidence-grid">
+    $('pair-evidence').innerHTML = `<div class="evidence-grid">
         <div>
           <strong>${e.agree} / ${e.pairs}</strong><span>matching path costs</span>
         </div>
@@ -540,7 +538,6 @@ $('check-pairs').addEventListener('click', async () => {
   }
 });
 
-// Synchronized UCS and A* comparison
 function stopBoth() {
   clearInterval(compareTimer);
   compareTimer = null;
@@ -587,18 +584,18 @@ function renderComparison() {
     $(`${a}-compare-why`).textContent = compareTick
       ? d.text
       : 'Both searches start with only the starting city in the frontier. Press Step both to begin.';
-    $(`${a}-compare-counts`).innerHTML = /* HTML */ `<span
+    $(`${a}-compare-counts`).innerHTML = `<span
         ><strong>${state.expanded}</strong> expanded so far</span
       ><span
-        ><strong>${state.frontier.length}</strong> waiting${state.done
-          ? ' (unused)'
-          : ''}</span
+        ><strong>${state.frontier.length}</strong> waiting${
+          state.done ? ' (unused)' : ''
+        }</span
       >`;
     $(`${a}-compare-frontier`).innerHTML =
       state.frontier
         .map(
           (n) =>
-            /* HTML */ `<li>
+            `<li>
               ${name(n.id)}
               <span>${a === 'ucs' ? `g = ${n.g}` : `${n.g} + ${n.h} = ${n.f}`}</span>
             </li>`,
@@ -656,12 +653,11 @@ $('compare-speed').addEventListener('change', () => {
   }
 });
 
-// Explain search walkthrough
 const explainPages = [
   [
     'What is the search trying to do?',
     () =>
-      /* HTML */ `<p>
+      `<p>
           Find a route from <strong>${name(start)}</strong> to
           <strong>${name(goal)}</strong> with the lowest total road distance.
         </p>
@@ -677,7 +673,7 @@ const explainPages = [
   [
     'What does “priority” mean?',
     () =>
-      /* HTML */ `<p>
+      `<p>
           The <strong>frontier</strong> is the list of discovered cities waiting to be
           examined. Priority is the number used to choose the next city.
           <strong>The lowest number goes first.</strong>
@@ -698,7 +694,7 @@ const explainPages = [
   [
     'Why can they choose different cities?',
     () =>
-      /* HTML */ `<p>
+      `<p>
           For the example <strong>Arad to Bucharest</strong>, after expanding Arad:
         </p>
         <div class="table-scroll">
@@ -746,7 +742,7 @@ const explainPages = [
   [
     'Where does Tri-Anchor + Hop fit?',
     () =>
-      /* HTML */ `<p>
+      `<p>
           It supplies <strong>h(n)</strong> for A*. It combines four lower bounds on the
           remaining distance:
         </p>
@@ -777,7 +773,7 @@ const explainPages = [
   [
     'How to read the comparison',
     () =>
-      /* HTML */ `<p>
+      `<p>
           <strong>Step both</strong> selects one city per unfinished search. The ring
           marks that city. Each panel tells you why it was chosen. A search stops when it
           selects the goal from its frontier.
@@ -854,7 +850,6 @@ for (const input of document.querySelectorAll('input[name=algorithm]')) {
   });
 }
 
-// Single-search playback controls
 function advance() {
   if (preview) {
     index = -1;
@@ -935,7 +930,7 @@ if (repositoryUrl && /^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/.test(reposit
   $('repository').textContent = 'GitHub repository: connection pending';
 }
 compare();
-// Optional browser-agent interface; normal controls work without WebMCP support.
+
 const context = document.modelContext;
 if (context?.registerTool) {
   const lifecycle = new AbortController();
@@ -988,7 +983,5 @@ if (context?.registerTool) {
         { signal: lifecycle.signal },
       ),
     ).catch(() => {});
-  } catch {
-    /* Optional browser capability. */
-  }
+  } catch {}
 }

@@ -1,5 +1,3 @@
-// Road lengths are transcribed from the assignment's Romania map (kilometres).
-// Coordinates are for the schematic only; they never affect search costs.
 export const cities = [
   ['Arad', 110, 225],
   ['Zerind', 140, 133],
@@ -23,7 +21,6 @@ export const cities = [
   ['Neamt', 640, 100],
 ].map(([name, x, y], id) => ({ id, name, x, y }));
 
-// Undirected roads and their distances in kilometres.
 export const roads = [
   ['Arad', 'Zerind', 75],
   ['Arad', 'Sibiu', 140],
@@ -54,7 +51,6 @@ export const roads = [
   cost,
 }));
 
-// Build the list of neighboring cities for each city.
 export const graph = cities.map((c) =>
   roads.flatMap((e) =>
     e.a === c.id
@@ -65,11 +61,9 @@ export const graph = cities.map((c) =>
   ),
 );
 
-// Fixed reference cities used by the Tri-Anchor + Hop heuristic.
 export const landmarkNames = ['Arad', 'Neamt', 'Eforie'];
 const minimumEdge = Math.min(...roads.map((e) => e.cost));
 
-// Dijkstra preparation: shortest road distances from one landmark to all cities.
 function distances(source) {
   const d = new Float64Array(cities.length).fill(Infinity),
     seen = new Set();
@@ -92,7 +86,6 @@ function distances(source) {
   return d;
 }
 
-// Prepare and retain the three landmark tables once, when this module loads.
 const prepStart = performance.now();
 export const landmarkTables = landmarkNames.map((name) =>
   distances(cities.findIndex((c) => c.name === name)),
@@ -100,10 +93,9 @@ export const landmarkTables = landmarkNames.map((name) =>
 export const landmarkSetupMs = performance.now() - prepStart;
 export const landmarkBytes = landmarkTables.reduce((sum, t) => sum + t.byteLength, 0);
 
-// Estimate the remaining distance to the selected goal for every city.
 export function heuristicFor(goal) {
   validateCity(goal);
-  // BFS counts the fewest roads to the goal, ignoring road lengths.
+
   const hops = new Int16Array(cities.length).fill(-1);
   hops[goal] = 0;
   const q = [goal];
@@ -115,7 +107,7 @@ export function heuristicFor(goal) {
       }
     }
   }
-  // Keep the strongest lower bound: minimum-hop cost or a landmark difference.
+
   return Float64Array.from(cities, (_, n) =>
     Math.max(
       minimumEdge * hops[n],
@@ -124,7 +116,6 @@ export function heuristicFor(goal) {
   );
 }
 
-// Return each component separately so the interface can explain the estimate.
 export function heuristicParts(node, goal) {
   const h = heuristicFor(goal);
   const q = [goal],
@@ -149,14 +140,12 @@ export function heuristicParts(node, goal) {
   };
 }
 
-// Reject invalid city IDs before reading graph or distance arrays.
 export function validateCity(id) {
   if (!Number.isInteger(id) || id < 0 || id >= cities.length) {
     throw new Error('Choose a valid city.');
   }
 }
 
-// Shared search loop: UCS uses g, while A* uses g + h for priority.
 export function search(
   start,
   goal,
@@ -180,7 +169,7 @@ export function search(
     peakFrontier = 1,
     peakStored = 1;
   const f = (n) => g[n] + (h?.[n] || 0);
-  // Same tie-breaking for both algorithms, so comparisons are reproducible.
+
   const order = (a, b) => f(a) - f(b) || cities[a].name.localeCompare(cities[b].name);
   const pathTo = (n) => {
     const path = [];
@@ -191,14 +180,13 @@ export function search(
   };
   while (frontier.length) {
     frontier.sort(order);
-    // Select the lowest-priority city before checking whether it is the goal.
+
     const current = frontier.shift();
     closed[current] = 1;
     const done = current === goal;
     if (!done) {
       expanded++;
       for (const edge of graph[current]) {
-        // Keep this route only if it improves the best cost found so far.
         const candidate = g[current] + edge.cost;
         if (candidate < g[edge.id]) {
           if (!Number.isFinite(g[edge.id])) {
@@ -219,7 +207,7 @@ export function search(
       peakStored,
       frontier.length + closed.reduce((a, b) => a + b, 0),
     );
-    // Snapshots drive playback; benchmarks disable them.
+
     if (trace) {
       steps.push({
         current,
@@ -264,7 +252,6 @@ export function search(
   };
 }
 
-// Measure search execution separately from preparation and animation traces.
 export function benchmark(start, goal, { batches = 15, runs = 100 } = {}) {
   validateCity(start);
   validateCity(goal);

@@ -4,3 +4,4 @@ node_modules/
 .sites-runtime/
 # The Sites helper owns its nested source checkout; do not track that metadata.
 romania-lab/.git/
+.vscode-notes/

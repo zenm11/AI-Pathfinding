@@ -15,7 +15,6 @@ export function exampleIds(example) {
 }
 
 export function storageBreakdown(result) {
-  // Typed-array payloads are exact; frontier slot size is an explicit model assumption.
   return {
     costs: cities.length * 8,
     parents: cities.length * 2,
@@ -105,8 +104,6 @@ export function allPairsEvidence() {
   }
   return { pairs: cities.length ** 2, agree, fewer, equal, more, hopStronger };
 }
-
-// A shared tick advances each search once; completed searches keep their final state.
 
 export function comparisonAt(result, tick) {
   const index = Math.min(Math.max(0, tick), result.steps.length) - 1;
