@@ -45,3 +45,20 @@ test('all-pairs evidence covers the graph and accounts for every comparison',()=
   const e=allPairsEvidence();assert.equal(e.pairs,400);assert.equal(e.agree,e.pairs);
   assert.equal(e.fewer+e.equal+e.more,e.pairs);assert(e.hopStronger>0);assert(e.equal>=20);
 });
+
+test('shared comparison ticks hold a finished search and reset cleanly for every city pair',async()=>{
+ const {comparisonAt}=await import('../dist/lab.js');
+ for(const start of cities)for(const goal of cities){
+  const pair=['ucs','astar'].map(a=>search(start.id,goal.id,a));
+  const ticks=Math.max(...pair.map(r=>r.steps.length));
+  for(const r of pair){
+   const ready=comparisonAt(r,0);assert.equal(ready.step,null);assert.equal(ready.expanded,0);assert.equal(ready.frontier[0].id,start.id);
+   for(let tick=1;tick<=ticks;tick++){
+    const frame=comparisonAt(r,tick);
+    assert.equal(frame.done,tick>=r.steps.length);
+    assert(frame.expanded<=r.expanded);
+    if(frame.done){assert.equal(frame.step.current,goal.id);assert.equal(frame.expanded,r.expanded);assert.deepEqual(frame.step.path,r.path);}
+   }
+  }
+ }
+});

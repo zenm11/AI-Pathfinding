@@ -49,3 +49,13 @@ export function allPairsEvidence() {
   }
   return {pairs: cities.length ** 2, agree, fewer, equal, more, hopStronger};
 }
+
+// A shared tick advances each search once; completed searches keep their final state.
+export function comparisonAt(result, tick) {
+  const index=Math.min(Math.max(0,tick),result.steps.length)-1;
+  const step=index>=0?result.steps[index]:null;
+  const decision=decisionAt(result,index);
+  return {index,step,decision,done:!!step?.done,
+    expanded:step?step.explored.length-(step.done?1:0):0,
+    frontier:step?.frontier||[{id:result.start,g:0,h:decision.h,f:decision.h}]};
+}

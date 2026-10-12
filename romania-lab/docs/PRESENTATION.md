@@ -39,3 +39,7 @@ Add member names and truthful contributions. Verify the instructor can access bo
 ## Ready-to-copy heuristic slides
 
 Use [the six Tri-Anchor + Hop slides and speaker notes](../dist/heuristic-slides.md) for the custom-heuristic section. They take about 4–5 minutes including the formula, landmark reasoning, hop reasoning, a worked comparison, the actual code excerpt, and correctness/tradeoffs. Adjust the outline above so this replaces the custom-heuristic explanation and part of the A* demonstration rather than adding another five minutes. Keep the complete recording within 10–15 minutes.
+
+## Side-by-side comparison and Explain search
+
+Use **Explain search** beside the main comparison button for a five-step introduction. **Compare searches** takes the audience to synchronized UCS and A* maps. At tick 2 of Arad to Bucharest, UCS selects Zerind while A* selects Sibiu. At tick 5, A* holds its completed route while UCS continues. One tick is a city selection, not a unit of runtime. Use **Measure runtime** for timings. **Reset both** resets the comparison; the single-search explorer has separate playback controls. On narrow screens, the comparison panels stack vertically.

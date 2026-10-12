@@ -1,9 +1,10 @@
 import {cities,roads,search,benchmark,heuristicParts,validateCity} from './search.js';
-import {examples, exampleIds, compareExample, allPairsEvidence, decisionAt, storageBreakdown} from './lab.js';
+import {examples, exampleIds, compareExample, allPairsEvidence, decisionAt, storageBreakdown, comparisonAt} from './lab.js?v=20261012-compare';
 import {repositoryUrl} from './config.js';
 const $=id=>document.getElementById(id);
 let start=0,goal=12,algorithm='astar',results={},timings=null,index=-1,timer=null,preview=false;
 let study=examples.map(compareExample),studyBusy=false;
+let compareTick=0,compareTimer=null,explainPage=0;
 const name=id=>cities[id].name;
 const pathText=path=>path.map(name).join(' → ');
 const svgNS='http://www.w3.org/2000/svg';
@@ -11,10 +12,10 @@ function svg(tag,attrs,text){const el=document.createElementNS(svgNS,tag);for(co
 for(const id of ['start','goal'])for(const c of [...cities].sort((a,b)=>a.name.localeCompare(b.name))){const option=document.createElement('option');option.value=c.id;option.textContent=c.name;$(id).append(option);}
 $('start').value=start;$('goal').value=goal;
 function stop(){clearInterval(timer);timer=null;$('play').textContent='Play search';}
-function compare(){stop();start=Number($('start').value);goal=Number($('goal').value);timings=null;results={ucs:search(start,goal,'ucs'),astar:search(start,goal,'astar')};index=-1;preview=false;render();$('announcement').textContent=`Compared ${name(start)} to ${name(goal)}. Both routes cost ${results.ucs.cost} kilometres.`;}
-function renderMap(step){
- const map=$('map');map.querySelectorAll('g').forEach(g=>g.remove());
- const group=svg('g',{}),path=preview?results[algorithm].path:(step?.path||[]);
+function compare(){stopBoth();compareTick=0;stop();start=Number($('start').value);goal=Number($('goal').value);timings=null;results={ucs:search(start,goal,'ucs'),astar:search(start,goal,'astar')};index=-1;preview=false;render();renderComparison();$('announcement').textContent=`Compared ${name(start)} to ${name(goal)}. Both routes cost ${results.ucs.cost} kilometres.`;}
+function renderMap(step,map=$('map'),path=preview?results[algorithm].path:(step?.path||[])){
+ map.querySelectorAll('g').forEach(g=>g.remove());
+ const group=svg('g',{});
  const highlighted=new Set(path.slice(1).map((id,i)=>[path[i],id].sort((a,b)=>a-b).join('-')));
  for(const e of roads){const a=cities[e.a],b=cities[e.b],on=highlighted.has([e.a,e.b].sort((a,b)=>a-b).join('-'));group.append(svg('line',{x1:a.x,y1:a.y,x2:b.x,y2:b.y,class:'road'+(on?' path':'')}));}
  for(const e of roads){const a=cities[e.a],b=cities[e.b];group.append(svg('text',{x:(a.x+b.x)/2+7,y:(a.y+b.y)/2-6,class:'road-label','text-anchor':'middle'},e.cost));}
@@ -83,7 +84,7 @@ $('study-results').addEventListener('click',event=>{
  $('start').value=s;$('goal').value=g;compare();document.querySelector('.workspace').scrollIntoView({behavior:'smooth',block:'start'});
 });
 $('run-study').addEventListener('click',async()=>{
- if(studyBusy)return;studyBusy=true;stop();$('run-study').disabled=true;$('export-study').disabled=true;
+ if(studyBusy)return;studyBusy=true;stopBoth();stop();$('run-study').disabled=true;$('export-study').disabled=true;
  try {
   for(let i=0;i<study.length;i++) {
    $('study-status').textContent=`Measuring route ${i+1} of ${study.length}…`;
@@ -109,17 +110,56 @@ $('check-pairs').addEventListener('click',async()=>{
  catch {$('pair-evidence').textContent='Comparison could not finish. Please try again.';}
  finally {button.disabled=false;}
 });
+function stopBoth(){clearInterval(compareTimer);compareTimer=null;$('compare-play').textContent='Play both';}
+function openComparison(){stop();$('comparison-title').focus({preventScroll:true});$('comparison').scrollIntoView({behavior:'smooth',block:'start'});}
+function comparisonLength(){return Math.max(results.ucs.steps.length,results.astar.steps.length);}
+function renderComparison(){
+ $('comparison-route').textContent=`${name(start)} → ${name(goal)}`;
+ const max=comparisonLength();
+ $('compare-timeline').max=max;$('compare-timeline').value=compareTick;
+ $('compare-tick').textContent=compareTick?`${compareTick} / ${max}`:'Ready';
+ $('compare-step').disabled=compareTick>=max;$('compare-reset').disabled=compareTick===0;
+ for(const a of ['ucs','astar']){
+  const r=results[a],state=comparisonAt(r,compareTick),{step,decision:d}=state;
+  renderMap(step,$(`${a}-compare-map`),step?.path||[]);
+  $(`${a}-compare-status`).textContent=state.done?'GOAL REACHED':step?`SELECTION ${state.index+1}`:'READY';
+  $(`${a}-compare-current`).textContent=step?(state.done?`Goal reached · ${name(d.node)}`:d.title):`Start at ${name(start)}`;
+  $(`${a}-compare-math`).textContent=a==='ucs'?`Priority = g = ${d.g} km`:`Priority = g + h = ${d.g} + ${d.h} = ${d.g+d.h} km`;
+  $(`${a}-compare-why`).textContent=compareTick?d.text:'Both searches start with only the starting city in the frontier. Press Step both to begin.';
+  $(`${a}-compare-counts`).innerHTML=`<span><strong>${state.expanded}</strong> expanded so far</span><span><strong>${state.frontier.length}</strong> waiting${state.done?' (unused)':''}</span>`;
+  $(`${a}-compare-frontier`).innerHTML=state.frontier.map(n=>`<li>${name(n.id)} <span>${a==='ucs'?`g = ${n.g}`:`${n.g} + ${n.h} = ${n.f}`}</span></li>`).join('')||'<li>No cities waiting.</li>';
+ }
+}
+function advanceBoth(){if(compareTick>=comparisonLength()){stopBoth();return;}compareTick++;renderComparison();if(compareTick>=comparisonLength())stopBoth();}
+$('compare-play').addEventListener('click',()=>{stop();if(compareTimer){stopBoth();return;}if(compareTick>=comparisonLength())compareTick=0;advanceBoth();if(compareTick<comparisonLength()){$('compare-play').textContent='Pause both';compareTimer=setInterval(advanceBoth,Number($('compare-speed').value));}});
+$('compare-step').addEventListener('click',()=>{stop();stopBoth();advanceBoth();});
+$('compare-reset').addEventListener('click',()=>{stopBoth();compareTick=0;renderComparison();});
+$('compare-timeline').addEventListener('input',()=>{stop();stopBoth();compareTick=Number($('compare-timeline').value);renderComparison();});
+$('compare-speed').addEventListener('change',()=>{if(compareTimer){clearInterval(compareTimer);compareTimer=setInterval(advanceBoth,Number($('compare-speed').value));}});
+const explainPages=[
+ ['What is the search trying to do?',()=>`<p>Find a route from <strong>${name(start)}</strong> to <strong>${name(goal)}</strong> with the lowest total road distance.</p><p>The map is a graph: cities are nodes, roads are edges, and the number on each road is its cost in kilometres. Both algorithms know those road costs.</p><p>A search explores possible routes in memory. The final route can be different from the order in which cities were explored.</p>`],
+ ['What does “priority” mean?',()=>`<p>The <strong>frontier</strong> is the list of discovered cities waiting to be examined. Priority is the number used to choose the next city. <strong>The lowest number goes first.</strong></p><dl><dt>g(n): cost so far</dt><dd>The cost of the best route found from the start to city n.</dd><dt>h(n): remaining estimate</dt><dd>A lower bound on the cost from city n to the selected goal.</dd></dl><p><strong>UCS uses g.</strong> It is unguided, but it is not random.<br><strong>A* uses g + h.</strong> It combines real road costs with guidance toward the goal.</p>`],
+ ['Why can they choose different cities?',()=>`<p>For the example <strong>Arad to Bucharest</strong>, after expanding Arad:</p><div class="table-scroll"><table><thead><tr><th>City</th><th>g</th><th>h</th><th>A* priority</th></tr></thead><tbody><tr><td>Zerind</td><td>75</td><td>493</td><td>568</td></tr><tr><td>Timisoara</td><td>118</td><td>536</td><td>654</td></tr><tr><td>Sibiu</td><td>140</td><td>278</td><td>418</td></tr></tbody></table></div><p>All values are kilometres. <strong>UCS chooses Zerind</strong> because 75 is the lowest g. <strong>A* chooses Sibiu</strong> because 418 is the lowest g + h.</p><p>Each search then examines the chosen city's neighbors, updates any cheaper routes, and picks the next lowest priority from the whole frontier. It does not expand all neighbors at once.</p>`],
+ ['Where does Tri-Anchor + Hop fit?',()=>`<p>It supplies <strong>h(n)</strong> for A*. It combines four lower bounds on the remaining distance:</p><ul><li>Three anchor bounds from Arad, Neamt, and Eforie: <strong>|distance from anchor to n − distance from anchor to goal|</strong>.</li><li>One hop bound: <strong>fewest roads remaining × 70 km</strong>, because every road costs at least 70 km.</li></ul><p>Take the <strong>maximum</strong> of the four bounds. Adding them could double-count distance. The anchors are reference points, not required stops.</p><p>At Sibiu heading to Bucharest: h = max(278, 278, 278, 140) = <strong>278 km</strong>. If the route from Arad cost 140 km, priority is 140 + 278 = <strong>418 km</strong>.</p><p>The app computes h independently of g. It is not generally an earlier priority minus distance travelled.</p>`],
+ ['How to read the comparison',()=>`<p><strong>Step both</strong> selects one city per unfinished search. The ring marks that city. Each panel tells you why it was chosen. A search stops when it selects the goal from its frontier.</p><p>When A* finishes earlier in the playback, its final route stays visible while UCS continues. The animation compares search effort. <strong>It does not measure runtime.</strong></p><p>The final result cards report total path cost, expanded cities, and estimated storage. Use <strong>Measure runtime</strong> for timed results. A* may explore fewer cities while using more storage or preparation time.</p><p>The full explanation under <strong>How it works</strong> includes the formula, code, and why the bounds preserve the optimal path cost.</p>`]
+];
+function renderExplanation(){const [title,content]=explainPages[explainPage];$('explain-title').textContent=title;$('explain-content').innerHTML=content();$('explain-progress').textContent=`${explainPage+1} of ${explainPages.length}`;$('explain-back').disabled=explainPage===0;$('explain-next').textContent=explainPage===explainPages.length-1?'Try side-by-side comparison':'Next';}
+$('explain-search').addEventListener('click',()=>{stop();stopBoth();explainPage=0;renderExplanation();$('explain-dialog').showModal();});
+$('explain-close').addEventListener('click',()=>$('explain-dialog').close());
+$('explain-back').addEventListener('click',()=>{explainPage--;renderExplanation();});
+$('explain-next').addEventListener('click',()=>{if(explainPage===explainPages.length-1){$('explain-dialog').close();openComparison();}else{explainPage++;renderExplanation();}});
+
 renderStudy();
-$('run').addEventListener('click',compare);
+$('run').addEventListener('click',()=>{compare();openComparison();});
 for(const id of ['start','goal'])$(id).addEventListener('change',compare);
 $('swap').addEventListener('click',()=>{const s=$('start').value;$('start').value=$('goal').value;$('goal').value=s;compare();});
 for(const input of document.querySelectorAll('input[name=algorithm]'))input.addEventListener('change',()=>{stop();algorithm=input.value;index=-1;preview=false;render();});
 function advance(){if(preview){index=-1;preview=false;}if(index>=results[algorithm].steps.length-1){stop();return;}index++;render();if(index===results[algorithm].steps.length-1)stop();}
-$('step').addEventListener('click',()=>{stop();advance();});
-function play(){if(timer){stop();return;}if(index>=results[algorithm].steps.length-1)index=-1;advance();if(index<results[algorithm].steps.length-1){$('play').textContent='Pause';timer=setInterval(advance,Number($('speed').value));}}
+$('step').addEventListener('click',()=>{stopBoth();stop();advance();});
+function play(){stopBoth();if(timer){stop();return;}if(index>=results[algorithm].steps.length-1)index=-1;advance();if(index<results[algorithm].steps.length-1){$('play').textContent='Pause';timer=setInterval(advance,Number($('speed').value));}}
 $('play').addEventListener('click',play);$('speed').addEventListener('change',()=>{if(timer){stop();play();}});
 $('timeline').addEventListener('input',()=>{stop();index=Number($('timeline').value)-1;preview=false;render();});
-$('benchmark').addEventListener('click',async()=>{stop();const measuredStart=start,measuredGoal=goal;const button=$('benchmark');button.disabled=true;button.textContent='Measuring…';await new Promise(resolve=>setTimeout(resolve,40));try{const measured=benchmark(measuredStart,measuredGoal);if(start===measuredStart&&goal===measuredGoal){timings=measured;renderResults();}}finally{button.disabled=false;button.textContent='Measure runtime';}});
+$('benchmark').addEventListener('click',async()=>{stopBoth();stop();const measuredStart=start,measuredGoal=goal;const button=$('benchmark');button.disabled=true;button.textContent='Measuring…';await new Promise(resolve=>setTimeout(resolve,40));try{const measured=benchmark(measuredStart,measuredGoal);if(start===measuredStart&&goal===measuredGoal){timings=measured;renderResults();}}finally{button.disabled=false;button.textContent='Measure runtime';}});
 if(repositoryUrl&&/^https:\/\/github\.com\/[\w.-]+\/[\w.-]+\/?$/.test(repositoryUrl)){const a=document.createElement('a');a.href=repositoryUrl;a.textContent='View source on GitHub';a.target='_blank';a.rel='noopener noreferrer';$('repository').append(a);}else{$('repository').textContent='GitHub repository: connection pending';}
 compare();
 // Optional browser-agent interface; normal controls work without WebMCP support.
