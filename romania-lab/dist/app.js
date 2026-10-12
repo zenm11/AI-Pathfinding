@@ -77,29 +77,69 @@ function compare() {
     `Compared ${name(start)} to ${name(goal)}. Both routes cost ${results.ucs.cost} kilometres.`;
 }
 
+const mapFrames = new WeakMap();
+const roadKey = (a, b) => [a, b].sort((x, y) => x - y).join('-');
+
 function renderMap(
   step,
   map = $('map'),
   path = preview ? results[algorithm].path : step?.path || [],
 ) {
+  const previous = mapFrames.get(map);
+  const context = `${start}-${goal}`;
+  const pathKey = path.join('-');
+  if (
+    previous?.step === step &&
+    previous.pathKey === pathKey &&
+    previous.context === context
+  ) {
+    return;
+  }
+  const duration = Math.max(
+    140,
+    Number($(map.id === 'map' ? 'speed' : 'compare-speed').value) * 0.9,
+  );
+  map.style.setProperty('--road-motion', `${duration}ms`);
+  map.style.setProperty('--scan-delay', `${path.length > 1 ? duration * 0.2 : 0}ms`);
+  const highlighted = new Set(path.slice(1).map((id, i) => roadKey(path[i], id)));
+  const oldPath = previous?.context === context ? previous.path : [];
+  const oldEdges = new Set(oldPath.slice(1).map((id, i) => roadKey(oldPath[i], id)));
+  const isPreview = map.id === 'map' && preview;
   map.querySelectorAll('g').forEach((g) => g.remove());
   const group = svg('g', {});
-  const highlighted = new Set(
-    path.slice(1).map((id, i) => [path[i], id].sort((a, b) => a - b).join('-')),
-  );
-  for (const e of roads) {
-    const a = cities[e.a],
-      b = cities[e.b],
-      on = highlighted.has([e.a, e.b].sort((a, b) => a - b).join('-'));
+  const line = (from, to, className) =>
+    svg('line', {
+      x1: cities[from].x,
+      y1: cities[from].y,
+      x2: cities[to].x,
+      y2: cities[to].y,
+      pathLength: 1,
+      class: className,
+      'aria-hidden': 'true',
+    });
+  for (const edge of roads) {
+    group.append(line(edge.a, edge.b, 'road'));
+  }
+  if (step && !isPreview) {
+    for (let i = 1; i < oldPath.length; i++) {
+      if (!highlighted.has(roadKey(oldPath[i - 1], oldPath[i]))) {
+        group.append(line(oldPath[i - 1], oldPath[i], 'road path road-departing'));
+      }
+    }
+  }
+  for (let i = 1; i < path.length; i++) {
+    const fresh = !oldEdges.has(roadKey(path[i - 1], path[i]));
     group.append(
-      svg('line', {
-        x1: a.x,
-        y1: a.y,
-        x2: b.x,
-        y2: b.y,
-        class: 'road' + (on ? ' path' : ''),
-      }),
+      line(path[i - 1], path[i], 'road path' + (fresh ? ' road-arriving' : '')),
     );
+  }
+  if (step && !step.done && !isPreview) {
+    for (const edge of roads) {
+      if (edge.a === step.current || edge.b === step.current) {
+        const neighbor = edge.a === step.current ? edge.b : edge.a;
+        group.append(line(step.current, neighbor, 'road road-scan'));
+      }
+    }
   }
   for (const e of roads) {
     const a = cities[e.a],
@@ -129,7 +169,14 @@ function renderMap(
       state = ' goal';
     }
     if (c.id === step?.current) {
-      group.append(svg('circle', { cx: c.x, cy: c.y, r: 17, class: 'city-current' }));
+      group.append(
+        svg('circle', {
+          cx: c.x,
+          cy: c.y,
+          r: 17,
+          class: 'city-current' + (!step.done && !isPreview ? ' city-pulse' : ''),
+        }),
+      );
     }
     group.append(
       svg('circle', {
@@ -162,6 +209,7 @@ function renderMap(
     );
   }
   map.append(group);
+  mapFrames.set(map, { step, pathKey, context, path: [...path] });
 }
 
 function renderResults() {
