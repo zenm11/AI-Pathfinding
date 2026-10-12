@@ -5,3 +5,6 @@ node_modules/
 # The Sites helper owns its nested source checkout; do not track that metadata.
 romania-lab/.git/
 .vscode-notes/
+romania-lab/docs/PRESENTATION.md
+romania-lab/dist/heuristic-slides.md
+romania-lab/.openai/

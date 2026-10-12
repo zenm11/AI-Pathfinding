@@ -59,7 +59,6 @@ Memory is a **logical payload estimate**, not measured JavaScript heap or RAM: c
 - `dist/index.html`, `dist/styles.css`: interface and methodology.
 - `dist/config.js`: GitHub repository URL.
 - `tests/search.test.mjs`: independent correctness checks.
-- `docs/PRESENTATION.md`: 10–15 minute demonstration outline.
 
 ## Code formatting
 
@@ -75,7 +74,7 @@ Prettier is only a development tool. Running the website and its tests still req
 
 ## Deployment
 
-The `dist` directory is a complete static site. It works on Sites, GitHub Pages, or any static host. The Sites manifest is in `.openai/hosting.json`; Sites hosting does not replace the assignment's requirement for a GitHub repository.
+The `dist` directory is a complete static site. It works on Sites, GitHub Pages, or any static host.
 
 The parent repository includes GitHub Actions verification and Pages publishing workflows. Enable **Settings → Pages → Source → GitHub Actions** once. Changes pushed to `main` then run the checks and publish `romania-lab/dist`. The previous Sites deployment is separate and does not update when GitHub Pages publishes.
 

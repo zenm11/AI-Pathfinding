@@ -12,10 +12,9 @@ npm test
 
 Open http://127.0.0.1:4173. No package installation or API keys are required.
 
-Both Uniform-Cost Search and A* support every city as either endpoint. The custom heuristic combines three landmark distance bounds with a minimum-hop bound. Includes search animation, runtime benchmarking, an explicit storage model, all-pairs verification, and a presentation outline.
+Both Uniform-Cost Search and A* support every city as either endpoint. The custom heuristic combines three landmark distance bounds with a minimum-hop bound. Includes search animation, runtime benchmarking, an explicit storage model, and all-pairs verification.
 
 - [Algorithm explanation](romania-lab/docs/ALGORITHMS.md)
-- [Presentation outline](romania-lab/docs/PRESENTATION.md)
 - [Tests](romania-lab/tests/search.test.mjs)
 
 Course PDFs and lecture slides are not included. Add group members and their contributions before submission.
