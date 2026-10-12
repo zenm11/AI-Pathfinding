@@ -9,6 +9,12 @@
   --gold: #dbb254;
   --white: #fff;
   --radius: 16px;
+  --solid: #142b25;
+  --map: #fdfefb;
+  --road: #d0d9cb;
+  --road-label: #71806e;
+  --city-label: #354b3d;
+  color-scheme: light;
 }
 * {
   box-sizing: border-box;
@@ -82,7 +88,7 @@ input:focus-visible {
 .brand-mark {
   display: grid;
   place-items: center;
-  background: var(--ink);
+  background: var(--solid);
   color: var(--lime);
   border-radius: 9px;
   font-size: 32px;
@@ -166,7 +172,7 @@ h3 {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   overflow: hidden;
-  background: white;
+  background: var(--white);
   box-shadow: 0 10px 40px #142b2505;
 }
 .controls {
@@ -198,7 +204,7 @@ select {
   padding: 12px 10px;
   color: var(--ink);
   border: 1px solid #ccd7cc;
-  background: #fff;
+  background: var(--white);
   border-radius: 7px;
   font-size: 15px;
 }
@@ -261,7 +267,7 @@ legend {
 }
 .primary {
   border: 0;
-  background: var(--ink);
+  background: var(--solid);
   color: var(--lime);
   font-size: 15px;
   font-weight: 600;
@@ -291,7 +297,7 @@ legend {
 }
 .map-panel {
   min-width: 0;
-  background: #fdfefb;
+  background: var(--map);
   display: flex;
   flex-direction: column;
 }
@@ -335,7 +341,7 @@ legend {
   overflow: visible;
 }
 .road {
-  stroke: #d0d9cb;
+  stroke: var(--road);
   stroke-width: 2.5;
   fill: none;
 }
@@ -346,9 +352,9 @@ legend {
 .road-label {
   font-family: Arial, sans-serif;
   font-size: 20px;
-  fill: #71806e;
+  fill: var(--road-label);
   paint-order: stroke;
-  stroke: #fdfefb;
+  stroke: var(--map);
   stroke-width: 6px;
   stroke-linejoin: round;
 }
@@ -356,14 +362,14 @@ legend {
   font-family: Arial, sans-serif;
   font-size: 23px;
   font-weight: 500;
-  fill: #354b3d;
+  fill: var(--city-label);
   paint-order: stroke;
-  stroke: #fdfefb;
+  stroke: var(--map);
   stroke-width: 5px;
   stroke-linejoin: round;
 }
 .city-dot {
-  fill: white;
+  fill: var(--white);
   stroke: #95aa95;
   stroke-width: 2.5;
 }
@@ -376,16 +382,16 @@ legend {
   stroke: #c6a242;
 }
 .city-dot.start {
-  fill: #286c50;
-  stroke: #286c50;
+  fill: var(--green);
+  stroke: var(--green);
 }
 .city-dot.goal {
-  fill: #d46d42;
-  stroke: #d46d42;
+  fill: var(--orange);
+  stroke: var(--orange);
 }
 .city-current {
   fill: none;
-  stroke: #286c50;
+  stroke: var(--green);
   stroke-width: 2;
   opacity: 0.35;
 }
@@ -438,16 +444,16 @@ legend {
 .step-button {
   border: 1px solid #cbd8c7;
   border-radius: 6px;
-  background: white;
+  background: var(--white);
   color: var(--ink);
   padding: 8px 12px;
   font-size: 14px;
   white-space: nowrap;
 }
 .play-button {
-  background: var(--ink);
+  background: var(--solid);
   color: white;
-  border-color: var(--ink);
+  border-color: var(--solid);
   min-width: 110px;
 }
 .playback input {
@@ -494,7 +500,7 @@ legend {
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 23px;
-  background: #fff;
+  background: var(--white);
 }
 .result-card.active {
   border-color: #73966d;
@@ -569,7 +575,7 @@ legend {
   grid-template-columns: 1.1fr 1fr;
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: #fff;
+  background: var(--white);
   overflow: hidden;
 }
 .trace-grid > div {
@@ -602,7 +608,7 @@ th {
   font-size: 12px;
   color: var(--muted);
   font-weight: 500;
-  background: white;
+  background: var(--white);
   position: sticky;
   top: 0;
 }
@@ -659,7 +665,7 @@ tbody tr:first-child td {
   line-height: 1.8;
 }
 .heuristic-card {
-  background: var(--ink);
+  background: var(--solid);
   color: #eff7ea;
   border-radius: 12px;
   padding: 30px;
@@ -1106,7 +1112,7 @@ main {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  background: white;
+  background: var(--white);
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 12px;
@@ -1201,7 +1207,7 @@ main {
 }
 .storage-section {
   margin-top: 16px;
-  background: white;
+  background: var(--white);
   border: 1px solid var(--line);
   border-radius: 10px;
   padding: 18px 22px;
@@ -1242,7 +1248,7 @@ tr.total-row td {
 .experiment-table {
   border: 1px solid var(--line);
   border-radius: 12px;
-  background: white;
+  background: var(--white);
   padding: 10px 15px;
 }
 .experiment-table table {
@@ -1626,7 +1632,7 @@ button:disabled {
 }
 .comparison-search {
   min-width: 0;
-  background: white;
+  background: var(--white);
   border: 1px solid var(--line);
   border-radius: 12px;
   overflow: hidden;
@@ -1840,4 +1846,136 @@ button:disabled {
 #explain-content tbody tr:first-child td {
   font-weight: 400;
   color: var(--ink);
+}
+
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: 42px;
+  padding: 8px 14px;
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  background: var(--white);
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.theme-toggle > span {
+  font-size: 20px;
+  line-height: 1;
+}
+.theme-toggle[aria-pressed='true'] {
+  border-color: var(--green);
+  color: var(--green);
+}
+:root[data-theme='midnight'] {
+  color-scheme: dark;
+  --ink: #e5edf6;
+  --muted: #a8b8cb;
+  --paper: #0b1220;
+  --white: #121e30;
+  --line: #30425a;
+  --green: #8cddbf;
+  --lime: #c4ee8c;
+  --orange: #ff9f7a;
+  --gold: #f7d682;
+  --solid: #193b39;
+  --map: #101c2c;
+  --road: #536980;
+  --road-label: #b2c2d5;
+  --city-label: #e5edf6;
+}
+[data-theme='midnight'] select,
+[data-theme='midnight'] .step-button,
+[data-theme='midnight'] .outline-button {
+  border-color: #536980;
+}
+[data-theme='midnight'] .algorithm-option:has(input:checked),
+[data-theme='midnight'] .insight,
+[data-theme='midnight'] .chips span,
+[data-theme='midnight'] .evidence-details,
+[data-theme='midnight'] .guide-equation,
+[data-theme='midnight'] .comparison-toolbar {
+  background: #1a3339;
+}
+[data-theme='midnight'] .playback,
+[data-theme='midnight'] .decision-panel,
+[data-theme='midnight'] .comparison-decision,
+[data-theme='midnight'] #explain-dialog {
+  background: #152337;
+}
+[data-theme='midnight'] .comparison-map {
+  background: var(--map);
+}
+[data-theme='midnight'] .map-container {
+  background-image: radial-gradient(#59738d44 0.7px, transparent 0.7px);
+}
+[data-theme='midnight'] .city-dot {
+  stroke: #90a6bd;
+}
+[data-theme='midnight'] .city-dot.explored {
+  fill: #7faea5;
+  stroke: #aacbc4;
+}
+[data-theme='midnight'] .legend-dot.explored {
+  background: #7faea5;
+}
+[data-theme='midnight'] .city-dot.frontier {
+  fill: var(--gold);
+  stroke: var(--gold);
+}
+[data-theme='midnight'] .city-dot.start {
+  stroke: var(--green);
+}
+[data-theme='midnight'] .city-dot.goal {
+  stroke: var(--orange);
+}
+[data-theme='midnight'] .city-current {
+  opacity: 0.8;
+}
+[data-theme='midnight'] .bound-list .winning-bound {
+  background: #264538;
+  border-color: #5e8d72;
+}
+[data-theme='midnight'] .next-cities,
+[data-theme='midnight'] td,
+[data-theme='midnight'] th {
+  border-color: var(--line);
+}
+[data-theme='midnight'] .result-card.active {
+  border-color: var(--green);
+}
+[data-theme='midnight'] .guide-details pre {
+  background: #0b1422;
+  color: var(--ink);
+}
+[data-theme='midnight'] #explain-dialog::backdrop {
+  background: #040916bb;
+}
+@media (max-width: 720px) {
+  .header {
+    height: auto;
+    min-height: 68px;
+    flex-wrap: wrap;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    gap: 10px 12px;
+  }
+  .header nav {
+    order: 3;
+    flex-basis: 100%;
+    justify-content: flex-end;
+  }
+  .header nav a:first-child {
+    display: inline;
+  }
+  .theme-toggle {
+    margin-left: auto;
+    min-height: 42px;
+    padding: 8px 11px;
+    font-size: 12px;
+  }
 }

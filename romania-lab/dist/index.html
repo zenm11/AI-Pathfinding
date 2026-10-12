@@ -14,7 +14,8 @@
       type="image/svg+xml"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23102720'/%3E%3Cpath d='M8 23 15 9 25 19' fill='none' stroke='%23b8ec71' stroke-width='3'/%3E%3Cg fill='%23b8ec71'%3E%3Ccircle cx='8' cy='23' r='3'/%3E%3Ccircle cx='15' cy='9' r='3'/%3E%3Ccircle cx='25' cy='19' r='3'/%3E%3C/g%3E%3C/svg%3E"
     />
-    <link rel="stylesheet" href="styles.css?v=20261012-compare" />
+    <script src="theme.js?v=20261013-midnight"></script>
+    <link rel="stylesheet" href="styles.css?v=20261013-midnight" />
     <script type="module" src="app.js?v=20261012-compare"></script>
   </head>
   <body>
@@ -29,6 +30,16 @@
         <a href="#comparison" class="quiet-link">Compare searches</a
         ><a href="#method" class="quiet-link">How it works</a>
       </nav>
+      <button
+        id="theme-toggle"
+        class="theme-toggle"
+        type="button"
+        aria-label="Midnight theme"
+        aria-pressed="false"
+        title="Switch to midnight theme"
+      >
+        <span aria-hidden="true">☾</span> Midnight
+      </button>
     </header>
     <main>
       <div class="page-heading">
@@ -393,7 +404,8 @@
           <h2>Tri-Anchor + Hop</h2>
           <p>
             A custom remaining-distance estimate for A*. Three reference cities and a
-            minimum road count provide four lower bounds. We keep the strongest one.
+            minimum road count provide four lower bounds. The heuristic keeps the
+            strongest one.
           </p>
           <div class="formula">UCS: f(n) = g(n)<br />A*: f(n) = g(n) + h(n)</div>
           <p>
@@ -427,7 +439,7 @@
             </div>
             <div>
               <p>
-                “Tri” means three. Our anchors are
+                “Tri” means three. The three anchors are
                 <strong>Arad, Neamt, and Eforie</strong>, spread across the west,
                 northeast, and southeast of the map. They give different reference points.
                 This is a fixed design choice, not a claim that these are the best
@@ -440,7 +452,7 @@
               </p>
               <p class="guide-equation">b<sub>L</sub>(n, t) = |D(L, n) − D(L, t)|</p>
               <p>
-                The absolute difference tells us how far apart n and t must be, at
+                The absolute difference indicates how far apart n and t must be, at
                 minimum. If they are 140 km and 418 km from the same anchor, they must be
                 at least 278 km apart by road. The route does not have to pass through
                 that anchor.
@@ -475,14 +487,14 @@
             <div>
               <p>
                 Each bound describes the same remaining journey. If the four bounds are
-                43, 43, 43, and 140 km, we know the journey must be at least
+                43, 43, 43, and 140 km, the journey must be at least
                 <strong>140 km</strong>. Taking the maximum retains the most useful
                 information without exceeding the true shortest distance.
               </p>
               <p>
                 Adding the bounds could count the same distance multiple times and
-                overestimate. “Tri-Anchor + Hop” names the combination of techniques.
-                Within h, we use <strong>max</strong>. The addition happens in A*
+                overestimate. “Tri-Anchor + Hop” names the combination of techniques. The
+                heuristic h uses <strong>max</strong>. The addition happens in A*
                 priority: <strong>f = g + h</strong>.
               </p>
             </div>
@@ -624,7 +636,7 @@
               <p>
                 <strong>Admissible</strong> means h never exceeds the true shortest
                 remaining distance. <strong>Consistent</strong> means h(u) ≤ road cost(u,
-                v) + h(v) across every road. Both hold for our bounds on this undirected
+                v) + h(v) across every road. Both hold for these bounds on this undirected
                 map, and h is zero at the goal. A* therefore preserves the optimal path
                 cost when it selects the goal from the frontier.
               </p>
@@ -644,17 +656,6 @@
                 on a 20-city map. Compare measured search time, preparation time,
                 expansions, and estimated storage separately. When roads change, recompute
                 the bounds.
-              </p>
-              <p>
-                <strong>What is custom?</strong> The name, fixed three-anchor choice, and
-                combination with the hop bound describe this project’s heuristic. A* and
-                landmark bounds are established ideas. We do not claim a new search
-                algorithm. The core landmark technique appears in
-                <a
-                  href="https://www.microsoft.com/en-us/research/publication/computing-the-shortest-path-a-search-meets-graph-theory-2/"
-                  >Goldberg and Harrelson’s work on A*, landmarks, and the triangle
-                  inequality</a
-                >.
               </p>
               <p class="small-note">
                 The repository tests compare all 400 ordered start–goal pairs against an
