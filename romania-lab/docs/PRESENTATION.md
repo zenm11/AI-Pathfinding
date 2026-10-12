@@ -35,3 +35,7 @@ Add member names and truthful contributions. Verify the instructor can access bo
 - Use **Measure five routes** before recording the comparison. **Download CSV** exports your device's measured results. Search timings are warmed medians; goal preparation is a separate single sample and landmark preparation is a one-time shared cost. Tiny timings can round to 0.0 µs.
 - Expand the storage breakdown to explain exact typed-array payloads and the assumed frontier payload. It remains an estimate of retained algorithm data, not measured peak RAM.
 - Run **Check all 400 start–destination pairs** to show cost agreement and search-effort counts. Agreement alone is not an independent correctness proof; the repository tests check against Floyd–Warshall. Do not generalize expansion counts into guaranteed runtime savings.
+
+## Ready-to-copy heuristic slides
+
+Use [the six Tri-Anchor + Hop slides and speaker notes](../dist/heuristic-slides.md) for the custom-heuristic section. They take about 4–5 minutes including the formula, landmark reasoning, hop reasoning, a worked comparison, the actual code excerpt, and correctness/tradeoffs. Adjust the outline above so this replaces the custom-heuristic explanation and part of the A* demonstration rather than adding another five minutes. Keep the complete recording within 10–15 minutes.
