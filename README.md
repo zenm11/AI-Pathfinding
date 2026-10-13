@@ -2,6 +2,9 @@
 
 Interactive Romania-map assignment for Introduction to Artificial Intelligence, 2026.
 
+- [Live web application](https://zenm11.github.io/AI-Pathfinding/)
+- [Presentation slides (Canva)](https://canva.link/5jt5cs4itvxv40i)
+
 The application and its documentation are in [`romania-lab/`](romania-lab/README.md).
 
 ```sh
